@@ -1,0 +1,15 @@
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\bin\Debug\Halmid-Updater.exe.config
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\bin\Debug\Halmid-Updater.exe
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\bin\Debug\Halmid-Updater.pdb
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\MainWindow.g.cs
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\App.g.cs
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater_MarkupCompile.cache
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater_MarkupCompile.lref
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\MainWindow.baml
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.g.resources
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid_Updater.Properties.Resources.resources
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.csproj.GenerateResource.cache
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.csproj.CoreCompileInputs.cache
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.exe
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.pdb
+C:\Users\Gulyeh\source\repos\Halmid-Server\Halmid-Updater\obj\Debug\Halmid-Updater.csprojAssemblyReference.cache

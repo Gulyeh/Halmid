@@ -1,0 +1,21 @@
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iis": {
+      "applicationUrl": "http://192.168.0.24/Halmid-Server",
+      "sslPort": 0
+    },
+    "iisExpress": {
+      "applicationUrl": "http://192.168.0.24:56453/",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "Halmid-Server": {
+      "commandName": "Project",
+      "nativeDebugging": false,
+      "applicationUrl": "http://192.168.0.24:5443"
+    },
+  }
+}

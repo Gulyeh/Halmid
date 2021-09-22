@@ -1,0 +1,13 @@
+﻿using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+
+namespace Halmid_Client.Variables
+{
+    class Global_Variables
+    {
+        public static string Last_userID_onlineMenu { get; set; }
+        public static Border last_clickedChannel_Border { get; set; }
+        public static string channelType { get; set; }
+        public static string status = "online";
+    }
+}

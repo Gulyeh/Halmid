@@ -1,0 +1,156 @@
+﻿<Window x:Class="Halmid_Client.Windows.NewChannel.AddChannel"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Halmid_Client.Windows.NewChannel"
+        mc:Ignorable="d"
+        Title="Halmid" Height="439.656" Width="501.63"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanMinimize"
+        Background="Transparent"
+        Loaded="Window_Loaded"
+        AllowsTransparency="True">
+
+    <Window.Resources>
+        <Style TargetType="{x:Type Button}" x:Key="TopButtons">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Name="Border" CornerRadius="2" BorderThickness="0">
+                            <ContentPresenter Margin="2" 
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" 
+                                 RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="Border" 
+                          Property="Background" Value="#131a20" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="Border" 
+                          Property="Background" Value="#1f2731" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="Border" 
+                          Property="Background" Value="#131a20" />
+                                <Setter Property="Foreground" Value="#131a20"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="RoundCorner" TargetType="{x:Type Button}">
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Grid x:Name="grid" Background="Transparent">
+                            <Border x:Name="border" CornerRadius="60" BorderBrush="DarkRed" BorderThickness="0">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          TextElement.FontWeight="Bold">
+                                </ContentPresenter>
+                            </Border>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#1f2731" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#1f2731" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#131a20" />
+                                <Setter Property="Foreground" Value="#131a20"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="{x:Type Button}" x:Key="Login">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Name="border" CornerRadius="15,15,15,15" Background="#131a20" BorderThickness="0">
+                            <ContentPresenter
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#131a24" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#131a31" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border Background="#1f2731" CornerRadius="20">
+            <Grid Grid.Row="1">
+                <DockPanel Height="210" VerticalAlignment="Top">
+                    <DockPanel Height="120" Width="120" Margin="25,25,0,0" VerticalAlignment="Top">
+                        <Button Style="{DynamicResource RoundCorner}" Click="SetAvatar_Click">
+                            <Ellipse Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality">
+                                <Ellipse.Fill>
+                                    <ImageBrush x:Name="ServerImage" Stretch="UniformToFill" ImageSource="{Binding Avatar}"/>
+                                </Ellipse.Fill>
+                            </Ellipse>
+                        </Button>
+                    </DockPanel>
+                    <StackPanel Orientation="Vertical" VerticalAlignment="Top">
+                        <TextBlock Text="Server Name" FontSize="15" Foreground="GhostWhite" Opacity="0.8" FontFamily="TYPOGRAPH PRO" HorizontalAlignment="Left" Margin="45,40,0,0"/>
+                        <Border CornerRadius="20 20 20 20" Background="#131a20" Height="36" Width="306" Margin="0,8,0,0">
+                            <TextBox Name="Channel_Name" Foreground="GhostWhite" FontSize="15" FontFamily="TYPOGRAPH PRO" Background="Transparent" Margin="10,8,10,3" MaxLength="35" BorderThickness="0"/>
+                        </Border>
+                        <Button Name="Create_Button" Style="{DynamicResource Login}" VerticalAlignment="Bottom" Width="120" BorderThickness="0" Height="35" Content="Create" FontSize="18" FontFamily="TYPOGRAPH PRO" Foreground="White" Background="#131a20" Margin="0,20,0,0" Click="NewChannel_Click">
+                            <Button.Resources>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="CornerRadius" Value="12"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                        <TextBlock Name="Create_err_msg" FontSize="10" Foreground="Gray" Opacity="0.8" FontFamily="TYPOGRAPH PRO" HorizontalAlignment="Center" Margin="0,10,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+                <Line X1="501.63" Stroke="GhostWhite" StrokeThickness="0.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <DockPanel VerticalAlignment="Bottom" Height="225">
+                    <StackPanel Orientation="Vertical" Height="158" Width="310" Background="Transparent" VerticalAlignment="Top" Margin="0,40,0,0">
+                        <TextBlock Text="Server Hash" FontSize="15" Foreground="GhostWhite" Opacity="0.8" FontFamily="TYPOGRAPH PRO" HorizontalAlignment="Left" Margin="45,0,0,0"/>
+                        <Border CornerRadius="20 20 20 20" Background="#131a20" Height="36" Margin="0,8,0,0">
+                            <TextBox Name="server_id" Foreground="GhostWhite" FontSize="15" FontFamily="TYPOGRAPH PRO" Background="Transparent" Margin="10,8,10,3" MaxLength="40" BorderThickness="0"/>
+                        </Border>
+                        <TextBlock Name="wrong_text" Visibility="Hidden" Text="Wrong Hash" Margin="0,5,10,0" FontSize="10" Foreground="GhostWhite" Opacity="0.8" FontFamily="TYPOGRAPH PRO" HorizontalAlignment="Right"/>
+                        <Button Name="Join_Button" Style="{DynamicResource Login}" VerticalAlignment="Bottom" Width="150" BorderThickness="0" Height="35" Content="Join Server" FontSize="18" FontFamily="TYPOGRAPH PRO" Foreground="White" Background="#131a20" Margin="0,40,0,0" Click="Join_Click">
+                            <Button.Resources>
+                                <Style TargetType="{x:Type Border}">
+                                    <Setter Property="CornerRadius" Value="12"/>
+                                </Style>
+                            </Button.Resources>
+                        </Button>
+                    </StackPanel>
+                </DockPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

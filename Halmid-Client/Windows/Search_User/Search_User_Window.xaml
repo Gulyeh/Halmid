@@ -1,0 +1,81 @@
+﻿<Page x:Class="Halmid_Client.Windows.Search_User.Search_User_Window"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:Halmid_Client.Windows.Search_User"
+      mc:Ignorable="d" 
+      d:DesignHeight="620" d:DesignWidth="970"
+      Title="Halmid"
+      Loaded="Window_Loaded">
+
+    <Page.Resources>
+        <Style TargetType="{x:Type Button}" x:Key="Friends">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Name="border" CornerRadius="15,15,15,15" Background="#131a20" BorderThickness="0">
+                            <ContentPresenter
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#131a24" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="#131a31" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style TargetType="{x:Type Button}" x:Key="Add_Friend">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border Name="border" CornerRadius="15,15,15,15" Background="DarkGreen" BorderThickness="1">
+                            <ContentPresenter
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="DarkGreen" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter TargetName="border" 
+                          Property="Background" Value="Green" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Page.Resources>
+    
+    <Grid Background="#131a20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="51"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <StackPanel VerticalAlignment="Top" Height="50" Orientation="Horizontal" HorizontalAlignment="Stretch">
+                <TextBlock Text="Friends" FontFamily="TYPOGRAPH PRO" Foreground="White" FontSize="15" VerticalAlignment="Center" Margin="20,0,0,0"/>
+                <Line Y1="30" Stroke="GhostWhite" Opacity="0.5" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                <Button Name="All_Friends" Click="allFriends_Clicked" Style="{DynamicResource Friends}" Margin="10,0,0,0" VerticalAlignment="Center" Width="80" Height="30" Content="All" FontSize="15" FontFamily="TYPOGRAPH PRO" Foreground="White"/>
+                <Button Name="Online_Friends" Click="allOnline_Clicked" Style="{DynamicResource Friends}" Margin="10,0,0,0" VerticalAlignment="Center" Width="80" Height="30" Content="Online" FontSize="15" FontFamily="TYPOGRAPH PRO" Foreground="White"/>
+                <Button Name="Pending_Friends" Click="pendingFriends_Clicked" Style="{DynamicResource Friends}" Margin="10,0,0,0" VerticalAlignment="Center" Width="80" Height="30" Content="Pending" FontSize="15" FontFamily="TYPOGRAPH PRO" Foreground="White"/>
+                <Button Name="Add_Friends" Click="addFriend_Clicked" Style="{DynamicResource Add_Friend}" Margin="20,0,0,0" VerticalAlignment="Center" Width="100" Height="30" Content="Add Friend" FontSize="15" FontFamily="TYPOGRAPH PRO" Foreground="White"/>
+            </StackPanel>
+            <Line Stretch="Fill" Stroke="Black" X1="900" VerticalAlignment="Top" Margin="0,50,0,0" HorizontalAlignment="Stretch"/>
+         </Grid>
+        <Grid Grid.Row="1">
+            <Frame Name="Main_Content" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        </Grid>
+    </Grid>
+</Page>

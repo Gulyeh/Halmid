@@ -13,6 +13,8 @@ namespace Halmid_Server.Functions
     public class CheckUpdate : BackgroundService
     {
         private IHubContext<ChatHub> HubContext { get; set; }
+        public static string Version { get; set; }
+        
         public CheckUpdate(IHubContext<ChatHub> hubContext)
         {
             HubContext = hubContext;
@@ -27,8 +29,16 @@ namespace Halmid_Server.Functions
                 {
                     while (!stoppingToken.IsCancellationRequested)
                     {
-                        cmd.CommandText = String.Format("SELECT Update_Client FROM update_allow");
-                        ifUpdate = Int32.Parse(cmd.ExecuteScalar().ToString());
+                        cmd.CommandText = String.Format("SELECT Update_Client, Update_Version FROM update_allow");
+                        using (MySqlDataReader readed = cmd.ExecuteReader())
+                        {
+                            while (readed.Read())
+                            {
+                                ifUpdate = Int32.Parse(readed.GetString("Update_Client"));
+                                Version = readed.GetString("Update_Version");
+                            }
+                            readed.Close();
+                        }
 
                         if (ifUpdate == 1)
                         {

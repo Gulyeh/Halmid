@@ -182,11 +182,15 @@ namespace Halmid_Client.Windows.Login
                                 if (data == true)
                                 {
                                     await Connector.connection.SendAsync("LoginAccount", LoginID, toSha256.sha256(user.Text), Global_Variables.status);
-                                    Connector.connection.On<string, string>("LoginStatus", async (isLogged, status) =>
+                                     Connector.connection.On<string, string, Dictionary<string, string>>("LoginStatus", async (isLogged, status, access) =>
                                     {
                                         switch (isLogged)
                                         {
                                             case "logged":
+                                                Global_Variables.api_login = access["login"];
+                                                Global_Variables.api_pass = access["pass"];
+                                                Global_Variables.api_accessurl = access["access_url"];
+                                                Global_Variables.api_uploadurl = access["upload_url"];
                                                 UserData.LoginID = LoginID;
                                                 UserData.Username = user.Text;
                                                 UserData.Status = status;

@@ -23,7 +23,7 @@ namespace Halmid_Server.Hubs
         public async Task EnterKey(string key, string connID)
         {
             bool accepted = key == "5ecc578f1254c47de84eb375eb292d5818515cb95b01e17f499b257214066d4c" ? true : false;
-            await Clients.Client(connID).SendAsync("CheckKey", accepted);
+            await Clients.Client(connID).SendAsync("CheckKey", accepted, CheckUpdate.Version);
         }
         public async Task Reconnect(string loginid, string status, string channelid)
         {

@@ -1,9 +1,12 @@
 ﻿using Halmid_Client.Variables;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -32,11 +35,38 @@ namespace Halmid_Client.Functions
             public string Base64 { get; set; }
             public string Post_Data { get; set; }
         }
+        private class LoginData
+        {
+            public string Login { get; set; }
+            public string Pass { get; set; }
+        }
 
-        public static byte[] ImageToByte(Image img)
+        private static byte[] ImageToByte(Image img)
         {
             ImageConverter converter = new ImageConverter();
             return (byte[])converter.ConvertTo(img, typeof(byte[]));
+        }
+        private static async Task<string> GetTokenAsync()
+        {
+            try
+            {
+                var data = new LoginData()
+                {
+                    Login = Global_Variables.api_login,
+                    Pass = Global_Variables.api_pass
+                };
+                string stringPayload = JsonConvert.SerializeObject(data);
+                Console.WriteLine(stringPayload);
+
+                var httpClient = new HttpClient();
+                var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
+                HttpResponseMessage msg = await httpClient.PostAsync(Global_Variables.api_accessurl, httpContent);
+                var response = JObject.Parse(await msg.Content.ReadAsStringAsync());
+                Console.WriteLine(response["Token"].ToString());
+                return response["Token"].ToString();
+            }
+            catch (Exception e) { Console.WriteLine(e); }
+            return null;
         }
         public static async Task SendtoApi(string imageid, string path, string type)
         {
@@ -44,6 +74,7 @@ namespace Halmid_Client.Functions
             {
                 string base64;
                 string stringPayload = String.Empty;
+                string _Token = await GetTokenAsync();
 
                 if (path != String.Empty)
                 {
@@ -89,7 +120,8 @@ namespace Halmid_Client.Functions
 
                 var httpClient = new HttpClient();
                 var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
-                await httpClient.PostAsync("http://31.178.21.16:7345/api/UploadImage", httpContent);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _Token);
+                await httpClient.PostAsync(Global_Variables.api_uploadurl, httpContent);
             }
             catch (Exception) { }
         }

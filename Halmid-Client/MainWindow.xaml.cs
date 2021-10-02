@@ -925,14 +925,7 @@ namespace Halmid_Client
         }
         private void Download_Update(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                ProcessStartInfo start = new ProcessStartInfo();
-                start.FileName = AppDomain.CurrentDomain.BaseDirectory + @"Halmid-Updater.exe";
-                Process.Start(start);
-                Environment.Exit(1);
-            }
-            catch (Exception) { }
+            Start_Updater.Start();
         }
         private async void TriggerTextChanged(object sender, TextChangedEventArgs e)
         {

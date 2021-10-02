@@ -9,5 +9,9 @@ namespace Halmid_Client.Variables
         public static Border last_clickedChannel_Border { get; set; }
         public static string channelType { get; set; }
         public static string status = "online";
+        public static string api_login { get; set; }
+        public static string api_pass { get; set; }
+        public static string api_accessurl { get; set; }
+        public static string api_uploadurl { get; set; }
     }
 }

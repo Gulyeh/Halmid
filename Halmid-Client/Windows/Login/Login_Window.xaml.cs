@@ -177,10 +177,15 @@ namespace Halmid_Client.Windows.Login
                             Create_HubConnection.NewConnection();
                             await Connect_Server.Connect();
                             await Connector.connection.SendAsync("EnterKey", toSha256.sha256(key.Text), Connector.connection.ConnectionId);
-                            Connector.connection.On<bool>("CheckKey", async (data) =>
+                            Connector.connection.On<bool, string>("CheckKey", async (data, version) =>
                             {
                                 if (data == true)
                                 {
+                                    if(version != Global_Variables.Version)
+                                    {
+                                        Start_Updater.Start();
+                                    }
+                                    
                                     await Connector.connection.SendAsync("LoginAccount", LoginID, toSha256.sha256(user.Text), Global_Variables.status);
                                      Connector.connection.On<string, string, Dictionary<string, string>>("LoginStatus", async (isLogged, status, access) =>
                                     {

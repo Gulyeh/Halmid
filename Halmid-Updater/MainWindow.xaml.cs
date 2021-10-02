@@ -35,8 +35,8 @@ namespace Halmid_Updater
                     wc.DownloadProgressChanged += client_DownloadProgressChanged;
                     wc.DownloadFileCompleted += client_DownloadFileCompleted;
                     await wc.DownloadFileTaskAsync(
-                        new Uri("http://31.178.21.16/Update/Update.rar"),
-                        AppDomain.CurrentDomain.BaseDirectory + @"Update_Pack.rar"
+                        new Uri("http://31.178.21.16/Update/Update.zip"),
+                        AppDomain.CurrentDomain.BaseDirectory + @"Update_Pack.zip"
                     );
                 }
             }
@@ -62,15 +62,19 @@ namespace Halmid_Updater
         }
         void client_DownloadFileCompleted(object sender, AsyncCompletedEventArgs e)
         {
-            Application.Current.Dispatcher.Invoke((Action)delegate
-            {
-                Download_Progress.Value = 0;
-                Info_Progress.Text = "Extracting...";
-                ProcessStartInfo start = new ProcessStartInfo();
-                start.FileName = AppDomain.CurrentDomain.BaseDirectory + @"Halmid-Client.exe";
-                Process.Start(start);
-                this.Close();
-            });
+            try{
+                Application.Current.Dispatcher.Invoke((Action)delegate
+                {
+                    Download_Progress.Value = 0;
+                    Info_Progress.Text = "Extracting...";
+                    await Functions.ExtractionFiles.Extract();
+                    await Task.Delay(1000);
+                    ProcessStartInfo start = new ProcessStartInfo();
+                    start.FileName = AppDomain.CurrentDomain.BaseDirectory + @"Halmid-Client.exe";
+                    Process.Start(start);
+                    this.Close();
+                });
+            }catch(Exception) { this.Close(); }
         }
     }
 }

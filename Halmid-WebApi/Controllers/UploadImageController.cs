@@ -9,6 +9,7 @@ namespace Halmid_WebApi.Controllers
     public class UploadImageController : ControllerBase
     {
         [HttpPost]
+        [Authorize]
         public IActionResult Post(JObject data)
         {
             if(data["Post_Data"].ToString() == "Message")

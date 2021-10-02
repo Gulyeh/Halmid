@@ -46,6 +46,14 @@ namespace Halmid_Server.Hubs
                 {
                     try
                     {
+                        Dictionary<string, string> apiaccess = new Dictionary<string, string>
+                        {
+                            {"login", "balistic"},
+                            {"pass", "airplane" },
+                            {"access_url", "http://31.178.21.16:7345/api/Security/GetToken" },
+                            {"upload_url", "http://31.178.21.16:7345/api/UploadImage" }
+                        };
+                        
                         cmd.CommandText = String.Format("SELECT login FROM users WHERE loginid = '{0}'", loginid);
                         string logindb = cmd.ExecuteScalar().ToString();
 
@@ -63,7 +71,7 @@ namespace Halmid_Server.Hubs
                             else{
                                 status = status == "online" ? "Green" : "Yellow";
                             }
-                            await Clients.Client(Context.ConnectionId).SendAsync("LoginStatus", "logged", status);
+                            await Clients.Client(Context.ConnectionId).SendAsync("LoginStatus", "logged", status, apiaccess);
                         }
                     }
                     catch (Exception)

@@ -20,15 +20,45 @@ namespace Halmid_Updater.Functions
                 {
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
+                        string dir = entry.FullName;
                         {
-                            entry.ExtractToFile(Path.Combine(zipPath, entry.FullName), true);
+                            if (entry.FullName.EndsWith("/"))
+                            {
+                                string path = zipPath + entry.FullName.Substring(0, entry.FullName.Length - 1);
+                                if (!Directory.Exists(path))
+                                {
+                                    Directory.CreateDirectory(path);
+                                }
+                                dir = entry.FullName.Substring(0, entry.FullName.Length - 1) + @"\Workaround.txt";
+                                entry.ExtractToFile(Path.Combine(zipPath, dir), true);
+                                await PermaDelete(Path.Combine(zipPath, dir));
+                            }
+                            else
+                            {
+                                entry.ExtractToFile(Path.Combine(zipPath, dir), true);
+                            }
                         }
                     }
                 }
-                File.Delete(zipPath + "/Update_Pack.zip");
-                return Task.CompletedTask;
+                await PermaDelete(zipPath + "Update_Pack.zip");
             }
-            catch (Exception e) { MessageBox.Show(e.ToString()); return Task.CompletedTask; }
+            catch (Exception) {}
+        }
+        
+        private static async Task PermaDelete(string path)
+        {
+            await Task.Run(() => { 
+                Process p = new Process();
+                MessageBox.Show(path);
+                p.StartInfo = new ProcessStartInfo("cmd.exe", "/c del -f " +path )
+                    {
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                p.Start();
+                p.WaitForExit();
+            });
         }
     }
 }

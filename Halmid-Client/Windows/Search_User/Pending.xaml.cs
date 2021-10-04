@@ -31,6 +31,7 @@ namespace Halmid_Client.Windows.Search_User
                 _Pending.pending.Add(user);
                 userList.ItemsSource = _Pending.pending;
                 userList.Items.Refresh();
+                NotifyBallon.Show(user.Name + " sent you a request", "New pending friend");
             });
             Connector.connection.On<string>("Accepted_friendRequest", userID =>
             {

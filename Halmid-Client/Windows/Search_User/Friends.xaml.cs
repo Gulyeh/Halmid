@@ -78,6 +78,7 @@ namespace Halmid_Client.Windows.Search_User
                     if (_Friends.friends.FirstOrDefault(x => x.userID == user.userID) != null)
                     {
                         _Friends.friends.FirstOrDefault(x => x.userID == user.userID).Status = user.Status;
+                        NotifyBallon.Show(_Friends.friends.FirstOrDefault(x => x.userID == user.userID).Name + " is Online", "Friend Online");
                     }
 
                     if (Friends_Title.Text == "All Friends")

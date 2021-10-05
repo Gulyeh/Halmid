@@ -44,16 +44,16 @@ namespace Halmid_Server.Hubs
             {
                 using (MySqlCommand cmd = Startup.connection.CreateCommand())
                 {
+                    Dictionary<string, string> apiaccess = new Dictionary<string, string>
+                    {
+                        {"login", "balistic"},
+                        {"pass", "airplane" },
+                        {"access_url", "http://31.178.21.16:7345/api/Security/GetToken" },
+                        {"upload_url", "http://31.178.21.16:7345/api/UploadImage" }
+                    };
+
                     try
                     {
-                        Dictionary<string, string> apiaccess = new Dictionary<string, string>
-                        {
-                            {"login", "balistic"},
-                            {"pass", "airplane" },
-                            {"access_url", "http://31.178.21.16:7345/api/Security/GetToken" },
-                            {"upload_url", "http://31.178.21.16:7345/api/UploadImage" }
-                        };
-                        
                         cmd.CommandText = String.Format("SELECT login FROM users WHERE loginid = '{0}'", loginid);
                         string logindb = cmd.ExecuteScalar().ToString();
 
@@ -68,7 +68,8 @@ namespace Halmid_Server.Hubs
                             {
                                 status = "Gray";
                             }
-                            else{
+                            else
+                            {
                                 status = status == "online" ? "Green" : "Yellow";
                             }
                             await Clients.Client(Context.ConnectionId).SendAsync("LoginStatus", "logged", status, apiaccess);
@@ -76,19 +77,28 @@ namespace Halmid_Server.Hubs
                     }
                     catch (Exception)
                     {
-                        Guid id = Guid.NewGuid();
                         cmd.CommandText = String.Format("INSERT INTO users (loginid, login, name, status, avatar) VALUES('{0}', '{1}', '{2}', '{3}', '{4}')", loginid, login, "Halmid_User", "online", "default");
                         cmd.ExecuteScalar();
-                        Directory.CreateDirectory("C:/xampp/htdocs/Users/" + id);
+                        Directory.CreateDirectory("C:/xampp/htdocs/Users/" + loginid);
                         User userData = new User();
                         userData.Name = "Halmid_User";
                         userData.ChannelID = "";
                         userData.LoginID = loginid;
                         userData.AvatarID = "default";
+
+                        if (status == "offline")
+                        {
+                            status = "Gray";
+                        }
+                        else
+                        {
+                            status = status == "online" ? "Green" : "Yellow";
+                        }
+
                         _connectionInfo[Context.ConnectionId] = userData;
                         Connection_Handle.userConnectionids.Add(loginid, Context.ConnectionId);
 
-                        await Clients.Client(Context.ConnectionId).SendAsync("LoginStatus", "logged", status);
+                        await Clients.Client(Context.ConnectionId).SendAsync("LoginStatus", "logged", status, apiaccess);
                     }
                 }
             }
@@ -102,12 +112,7 @@ namespace Halmid_Server.Hubs
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
                 string channelname = String.Empty;
-                string admin = String.Empty;
                 string avatar = String.Empty;
-                List<Online_Users_inChannel> Online_Users = new List<Online_Users_inChannel>();
-                List<Channel_Messages> _Messages = new List<Channel_Messages>();
-                List<string> avatar_links_msg = new List<string>();
-                List<string> avatar_links_online = new List<string>();
 
                 int isBanned = 0;
 
@@ -139,75 +144,34 @@ namespace Halmid_Server.Hubs
                                 cmd.CommandText = String.Format("INSERT INTO users_in_channels (channel_id, user_id) VALUES('{0}', '{1}')", Channel_ID, userData.LoginID);
                                 cmd.ExecuteScalar();
 
-                                cmd.CommandText = String.Format("SELECT message, time, name, image, idmessages, idsender, avatar FROM messages_history, users WHERE idchannel='{0}' AND users.loginid = messages_history.idsender ORDER BY idmessages ASC LIMIT 100", Channel_ID);
+                                cmd.CommandText = String.Format("SELECT image FROM channels WHERE channel_key = '{0}'", Channel_ID);
                                 using (MySqlDataReader readed = cmd.ExecuteReader())
                                 {
                                     while (readed.Read())
                                     {
-                                        Channel_Messages msg = new Channel_Messages();
-                                        msg.MessageID = readed.GetString("idmessages");
-                                        msg.From = readed.GetString("name");
-                                        msg.Timestamp = readed.GetString("time");
-                                        msg.Sender_id = readed.GetString("idsender");
-                                        msg.Colored = userData.LoginID == readed.GetString("idsender") ? "DarkGreen" : "White";
-                                        if (!readed.IsDBNull(readed.GetOrdinal("message")))
-                                        {
-                                            msg.Content = readed.GetString("message");
-                                        }
-
-                                        if (!readed.IsDBNull(readed.GetOrdinal("image")))
-                                        {
-                                            msg.ImageID = ApiVariable.IPConnection + "" + userData.ChannelID + "/" + readed.GetString("image") + ".png";
-                                        }
-
-                                        if (readed.GetString("avatar") != string.Empty)
-                                        {
-                                            avatar_links_msg.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("idsender") + "/" + readed.GetString("avatar") + ".png");
-                                        }
-                                        else
-                                        {
-                                            avatar_links_msg.Add(ApiVariable.IPConnection + "Users/default.png");
-                                        }
-                                        _Messages.Add(msg);
+                                        avatar = ApiVariable.IPConnection + "Channels/" + readed.GetString("image") + ".png";
                                     }
                                     readed.Close();
                                 }
 
-                                cmd.CommandText = String.Format("SELECT channel_admin, image FROM channels WHERE channel_key = '{0}'", Channel_ID);
-                                using (MySqlDataReader readed = cmd.ExecuteReader())
+                                await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", true, channelname, Channel_ID, avatar);
+
+                                Online_Users_inChannel user = new Online_Users_inChannel();
+                                user.Name = userData.Name;
+                                user.userID = userData.LoginID;
+                                user.isAdmin = "Collapsed";
+                                cmd.CommandText = String.Format("SELECT status FROM users WHERE loginid = '{0}'", userData.LoginID);
+                                string status = cmd.ExecuteScalar().ToString();
+                                if(status == "offline")
                                 {
-                                    while (readed.Read())
-                                    {
-                                        admin = readed.GetString("channel_admin");
-                                        avatar = ApiVariable.IPConnection + "Channels/"+readed.GetString("image")+".png";
-                                    }
-                                    readed.Close();
+                                    user.Status = "Gray";
                                 }
-
-                                cmd.CommandText = String.Format("SELECT user_id, name, status, avatar FROM users_in_channels, users WHERE channel_id = '{0}' AND (status = 'online' OR status = 'away') AND user_id = loginid;", Channel_ID);
-                                using (MySqlDataReader readed = cmd.ExecuteReader())
+                                else
                                 {
-                                    while (readed.Read())
-                                    {
-                                        Online_Users_inChannel online = new Online_Users_inChannel();
-                                        online.Name = readed.GetString("name");
-                                        online.userID = readed.GetString("user_id");
-                                        online.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
-                                        online.isAdmin = admin == readed.GetString("user_id") ? "Visible" : "Collapsed";
-                                        if (readed.GetString("avatar") != string.Empty)
-                                        {
-                                            avatar_links_online.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("user_id") + "/" + readed.GetString("avatar") + ".png");
-                                        }
-                                        else
-                                        {
-                                            avatar_links_online.Add(ApiVariable.IPConnection + "Users/default.png");
-                                        }
-                                        Online_Users.Add(online);
-                                    }
-                                    readed.Close();
+                                    user.Status = status == "online" ? "Green" : "Yellow";
                                 }
 
-                                await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", true, channelname, Channel_ID, _Messages, Online_Users, avatar_links_msg, avatar_links_online, avatar);
+                                await Clients.Group(Channel_ID).SendAsync("User_Online", user, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png");
 
                                 if (userData.ChannelID != String.Empty && userData.ChannelID != null)
                                 {
@@ -217,7 +181,12 @@ namespace Halmid_Server.Hubs
                                 await Groups.AddToGroupAsync(Context.ConnectionId, Channel_ID);
                                 userData.ChannelID = Channel_ID;
 
-                                await Clients.Group(Channel_ID).SendAsync("ReceiveMessage", "Server", $"{userData.Name} has joined!", "", "");
+                                Dictionary<string, string> msg = new Dictionary<string, string>
+                                {
+                                    {"message", $"{userData.Name} has joined!" }
+                                };
+
+                                await Clients.Group(Channel_ID).SendAsync("ReceiveMessage", "Server", msg, "-1", "-1", ApiVariable.IPConnection + "Users/default.png");
                             }
                             else
                             {
@@ -247,7 +216,7 @@ namespace Halmid_Server.Hubs
                         }
                         else
                         {
-                            await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", false, "", "", null, null, null, null, null);
+                            await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", false, "", "", null);
                         }
 
                     }
@@ -255,11 +224,11 @@ namespace Halmid_Server.Hubs
                 catch (Exception e)
                 {
                     Console.WriteLine(e);
-                    await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", false, "", "", null, null, null, null, null);
+                    await Clients.Client(Context.ConnectionId).SendAsync("Joined_Channel", false, "", "", null);
                 }
             }
         }
-        public async Task SendMessage(string message, string time, string type)
+        public async Task SendMessage(Dictionary<string, string> message, string time, string type)
         {
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
@@ -267,7 +236,7 @@ namespace Halmid_Server.Hubs
                 {
                     using (MySqlCommand cmd = Startup.connection.CreateCommand())
                     {
-                        if (message != String.Empty && message != null)
+                        if (message != null)
                         {
                             string messid = String.Empty;
                             bool Blocked = false;
@@ -275,7 +244,7 @@ namespace Halmid_Server.Hubs
 
                             if (type == "channel")
                             {
-                                cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time) VALUES('{0}','{1}','{2}','{3}'); SELECT LAST_INSERT_ID();", message, userData.LoginID, userData.ChannelID, time);
+                                cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, decrypt_key) VALUES('{0}','{1}','{2}','{3}','{4}'); SELECT LAST_INSERT_ID();", message["message"], userData.LoginID, userData.ChannelID, time, message["key"]);
                                 messid = cmd.ExecuteScalar().ToString();
                             }
                             else
@@ -295,17 +264,22 @@ namespace Halmid_Server.Hubs
 
                                 if (!Blocked)
                                 {
-                                    cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time) VALUES('{0}','{1}','{2}','{3}'); SELECT LAST_INSERT_ID();", message, userData.LoginID, userData.ChannelID, time);
+                                    cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, decrypt_key) VALUES('{0}','{1}','{2}','{3}','{4}'); SELECT LAST_INSERT_ID();", message["message"], userData.LoginID, userData.ChannelID, time, message["key"]);
                                     messid = cmd.ExecuteScalar().ToString();
                                 }
                                 else
                                 {
-                                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", "Server", "Cannot send message.\nThis user has blocked you.", "", "");
+                                    Dictionary<string, string> msg = new Dictionary<string, string>
+                                    {
+                                        {"message", "Cannot send message.\nThis user has blocked you." }
+                                    };
+
+                                    await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", "Server", msg, "-1", "-1", ApiVariable.IPConnection + "Users/default.png");
                                     return;
                                 }
                             }
 
-                            if (userData.AvatarID != string.Empty)
+                            if (userData.AvatarID != "default")
                             {
                                 url = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
                             }
@@ -318,10 +292,10 @@ namespace Halmid_Server.Hubs
                         }
                     }
                 }
-                catch (Exception) { }
+                catch (Exception e) { Console.WriteLine(e); }
             }
         }
-        public async Task Send_ImageMessage(string imageid, string message, string time, string type)
+        public async Task Send_ImageMessage(string imageid, Dictionary<string, string> message, string time, string type)
         {
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
@@ -333,49 +307,56 @@ namespace Halmid_Server.Hubs
                         bool Blocked = false;
                         string url;
 
-                        if (type == "channel")
+                        if (message != null)
                         {
-                            cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, image) VALUES('{0}','{1}','{2}','{3}', '{4}'); SELECT LAST_INSERT_ID();", message, userData.LoginID, userData.ChannelID, time, imageid);
-                            messid = cmd.ExecuteScalar().ToString();
-                        }
-                        else
-                        {
-                            cmd.CommandText = String.Format("SELECT Blocked_ID FROM blocked WHERE Channel_ID = '{0}'", userData.ChannelID);
-                            using (MySqlDataReader readed = cmd.ExecuteReader())
+                            if (type == "channel")
                             {
-                                while (readed.Read())
-                                {
-                                    if (readed.GetString("Blocked_ID") == userData.LoginID)
-                                    {
-                                        Blocked = true;
-                                    }
-                                }
-                                readed.Close();
-                            }
-                            if (!Blocked)
-                            {
-                                cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, image) VALUES('{0}','{1}','{2}','{3}', '{4}'); SELECT LAST_INSERT_ID();", message, userData.LoginID, userData.ChannelID, time, imageid);
+                                cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, image, decrypt_key) VALUES('{0}','{1}','{2}','{3}','{4}','{5}'); SELECT LAST_INSERT_ID();", message["message"], userData.LoginID, userData.ChannelID, time, imageid, message["key"]);
                                 messid = cmd.ExecuteScalar().ToString();
                             }
                             else
                             {
-                                await Clients.Client(Context.ConnectionId).SendAsync("ReceiveMessage", "Server", "Cannot send message.\nThis user has blocked you.", "", "");
-                                return;
+                                cmd.CommandText = String.Format("SELECT Blocked_ID FROM blocked WHERE Channel_ID = '{0}'", userData.ChannelID);
+                                using (MySqlDataReader readed = cmd.ExecuteReader())
+                                {
+                                    while (readed.Read())
+                                    {
+                                        if (readed.GetString("Blocked_ID") == userData.LoginID)
+                                        {
+                                            Blocked = true;
+                                        }
+                                    }
+                                    readed.Close();
+                                }
+                                if (!Blocked)
+                                {
+                                    cmd.CommandText = String.Format("INSERT INTO messages_history (message, idsender, idchannel, time, image, decrypt_key) VALUES('{0}','{1}','{2}','{3}','{4}','{5}'); SELECT LAST_INSERT_ID();", message["message"], userData.LoginID, userData.ChannelID, time, imageid, message["key"]);
+                                    messid = cmd.ExecuteScalar().ToString();
+                                }
+                                else
+                                {
+                                    Dictionary<string, string> msg = new Dictionary<string, string>
+                                    {
+                                        {"message", "Cannot send message.\nThis user has blocked you." }
+                                    };
+
+                                    await Clients.Client(Context.ConnectionId).SendAsync("Receive_ImageMessage", "Server", msg, "-1", "-1", ApiVariable.IPConnection + "Users/default.png");
+                                    return;
+                                }
                             }
-                        }
 
-                        if (userData.AvatarID != string.Empty)
-                        {
-                            url = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
-                        }
-                        else
-                        {
-                            url = ApiVariable.IPConnection + "Users/default.png";
-                        }
+                            if (userData.AvatarID != "default")
+                            {
+                                url = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
+                            }
+                            else
+                            {
+                                url = ApiVariable.IPConnection + "Users/default.png";
+                            }
 
-                        await Clients.Group(userData.ChannelID).SendAsync("Receive_ImageMessage", userData.Name, message, ApiVariable.IPConnection + "" + userData.ChannelID + "/" + imageid + ".png", messid, userData.LoginID, url);
+                            await Clients.Group(userData.ChannelID).SendAsync("Receive_ImageMessage", userData.Name, message, ApiVariable.IPConnection + "Channels/" + userData.ChannelID + "/" + imageid + ".png", messid, userData.LoginID, url);
+                        }
                     }
-
                 }
                 catch (Exception e) { Console.WriteLine(e); }
             }
@@ -497,7 +478,14 @@ namespace Halmid_Server.Hubs
                             while (readed.Read())
                             {
                                 name = readed.GetString("name");
-                                avatar = ApiVariable.IPConnection + "Users/" + userData.LoginID+ "/" + readed.GetString("avatar") + ".png";
+                                if(userData.AvatarID == "default")
+                                {
+                                    avatar = ApiVariable.IPConnection + "Users/default.png";
+                                }
+                                else
+                                {
+                                    avatar = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + readed.GetString("avatar") + ".png";
+                                }
 
                             }
                             readed.Close();
@@ -560,13 +548,13 @@ namespace Halmid_Server.Hubs
                                         data.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                     }
                                     data.channelID = channels_id[i];
-                                    if (readed.GetString("avatar") != string.Empty)
+                                    if (readed.GetString("avatar") != "default")
                                     {
-                                        avatar_links.Add(ApiVariable.IPConnection + "Users/"+id+"/"+readed.GetString("avatar")+".png");
+                                        avatar_links.Add(ApiVariable.IPConnection + "Users/" + id + "/" + readed.GetString("avatar") + ".png");
                                     }
                                     else
                                     {
-                                        avatar_links.Add( ApiVariable.IPConnection + "Users/default.png");
+                                        avatar_links.Add(ApiVariable.IPConnection + "Users/default.png");
                                     }
                                 }
                                 readed.Close();
@@ -602,7 +590,7 @@ namespace Halmid_Server.Hubs
                         cmd.CommandText = String.Format("INSERT INTO users_in_channels (channel_id, user_id) VALUES('{0}', '{1}')", id, userData.LoginID);
                         cmd.ExecuteScalar();
 
-                        Directory.CreateDirectory("C:/xampp/htdocs/" + id);
+                        Directory.CreateDirectory("C:/xampp/htdocs/Channels/" + id);
 
                         await Clients.Client(Context.ConnectionId).SendAsync("Created_Channel", true, id, channel_name, ApiVariable.IPConnection + "Channels/" + avatarID + ".png");
                     }
@@ -631,7 +619,7 @@ namespace Halmid_Server.Hubs
                                     Channels data = new Channels();
                                     data.ChannelHash = readed.GetString("channel_key");
                                     data.Name = readed.GetString("channel_name");
-                                    avatar_url.Add(ApiVariable.IPConnection + "Channels/" + readed.GetString("image")+".png");
+                                    avatar_url.Add(ApiVariable.IPConnection + "Channels/" + readed.GetString("image") + ".png");
                                     _Channels.Add(data);
                                 }
                                 readed.Close();
@@ -713,7 +701,7 @@ namespace Halmid_Server.Hubs
                                         {
                                             user.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                         }
-                                        if (readed.GetString("avatar") != string.Empty)
+                                        if (readed.GetString("avatar") != "default")
                                         {
                                             avatar_links.Add(ApiVariable.IPConnection + "Users/" + id + "/" + readed.GetString("avatar") + ".png");
                                         }
@@ -740,7 +728,7 @@ namespace Halmid_Server.Hubs
                                         Online_Users_inChannel user = new Online_Users_inChannel();
                                         user.userID = id;
                                         user.Name = readed.GetString("name");
-                                        if (readed.GetString("avatar") != string.Empty)
+                                        if (readed.GetString("avatar") != "default")
                                         {
                                             avatar_links.Add(ApiVariable.IPConnection + "Users/" + id + "/" + readed.GetString("avatar") + ".png");
                                         }
@@ -753,7 +741,7 @@ namespace Halmid_Server.Hubs
                                     readed.Close();
                                 }
                             }
-                      
+
                             await Clients.Client(Context.ConnectionId).SendAsync("Pending_friendRequests", _Pending, avatar_links);
                         }
                         catch (Exception e)
@@ -770,6 +758,7 @@ namespace Halmid_Server.Hubs
             {
                 if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
                 {
+                    Dictionary<string, string> crypted = new Dictionary<string, string>();
                     List<Channel_Messages> _Messages = new List<Channel_Messages>();
                     List<Online_Users_inChannel> Online_Users = new List<Online_Users_inChannel>();
                     List<string> avatar_links_msg = new List<string>();
@@ -786,9 +775,10 @@ namespace Halmid_Server.Hubs
 
                     using (MySqlCommand cmd = Startup.connection.CreateCommand())
                     {
-                        cmd.CommandText = String.Format("SELECT idmessages, message, time, name, idsender, image, avatar, loginid FROM (SELECT idmessages, message, time, users.name, idsender, image, avatar, loginid FROM messages_history, users WHERE idchannel='{0}' AND users.loginid = messages_history.idsender ORDER BY idmessages DESC LIMIT 100) sub ORDER BY idmessages ASC", channelID);
+                        cmd.CommandText = String.Format("SELECT idmessages, message, time, name, idsender, image, avatar, loginid, decrypt_key FROM (SELECT idmessages, message, time, users.name, idsender, image, avatar, loginid, decrypt_key FROM messages_history, users WHERE idchannel='{0}' AND users.loginid = messages_history.idsender ORDER BY idmessages DESC LIMIT 100) sub ORDER BY idmessages ASC", channelID);
                         using (MySqlDataReader readed = cmd.ExecuteReader())
                         {
+                            int i = 0;
                             while (readed.Read())
                             {
                                 Channel_Messages msg = new Channel_Messages();
@@ -797,9 +787,10 @@ namespace Halmid_Server.Hubs
                                 msg.Timestamp = readed.GetString("time");
                                 msg.Sender_id = readed.GetString("idsender");
                                 msg.Colored = userData.LoginID == readed.GetString("idsender") ? "DarkGreen" : "White";
-                                if (!readed.IsDBNull(readed.GetOrdinal("message")))
+                                if (!readed.IsDBNull(readed.GetOrdinal("message")) && !readed.IsDBNull(readed.GetOrdinal("decrypt_key")))
                                 {
-                                    msg.Content = readed.GetString("message");
+                                    crypted.Add("message" + i, readed.GetString("message"));
+                                    crypted.Add("key" + i, readed.GetString("decrypt_key"));
                                 }
 
                                 if (!readed.IsDBNull(readed.GetOrdinal("image")))
@@ -807,7 +798,7 @@ namespace Halmid_Server.Hubs
                                     msg.ImageID = ApiVariable.IPConnection + "" + userData.ChannelID + "/" + readed.GetString("image") + ".png";
                                 }
 
-                                if (readed.GetString("avatar") != string.Empty)
+                                if (readed.GetString("avatar") != "default")
                                 {
                                     avatar_links_msg.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("idsender") + "/" + readed.GetString("avatar") + ".png");
                                 }
@@ -816,6 +807,7 @@ namespace Halmid_Server.Hubs
                                     avatar_links_msg.Add(ApiVariable.IPConnection + "Users/default.png");
                                 }
                                 _Messages.Add(msg);
+                                i++;
                             }
                             readed.Close();
                         }
@@ -835,7 +827,7 @@ namespace Halmid_Server.Hubs
                                     online.userID = readed.GetString("user_id");
                                     online.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                     online.isAdmin = admin == readed.GetString("user_id") ? "Visible" : "Collapsed";
-                                    if (readed.GetString("avatar") != string.Empty)
+                                    if (readed.GetString("avatar") != "default")
                                     {
                                         avatar_links_online.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("user_id") + "/" + readed.GetString("avatar") + ".png");
                                     }
@@ -848,11 +840,11 @@ namespace Halmid_Server.Hubs
                                 readed.Close();
                             }
 
-                            await Clients.Client(Context.ConnectionId).SendAsync("Switched_Channel", true, _Messages, Online_Users, admin, avatar_links_msg, avatar_links_online);
+                            await Clients.Client(Context.ConnectionId).SendAsync("Switched_Channel", true, _Messages, crypted, Online_Users, admin, avatar_links_msg, avatar_links_online);
                         }
                         else
                         {
-                            await Clients.Client(Context.ConnectionId).SendAsync("Switched_privateChannel", true, _Messages, channelID, avatar_links_msg);
+                            await Clients.Client(Context.ConnectionId).SendAsync("Switched_privateChannel", true, _Messages, crypted, channelID, avatar_links_msg);
                         }
 
                         await Groups.AddToGroupAsync(Context.ConnectionId, channelID);
@@ -890,6 +882,8 @@ namespace Halmid_Server.Hubs
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
                 List<string> Channel_ids = new List<string>();
+                List<string> Friends_ids = new List<string>();
+                List<string> Privates_ids = new List<string>();
                 try
                 {
                     using (MySqlCommand cmd = Startup.connection.CreateCommand())
@@ -909,12 +903,64 @@ namespace Halmid_Server.Hubs
                                 readed.Close();
                             }
 
+                            cmd.CommandText = String.Format("SELECT user1_id, user2_id FROM friends WHERE user1_id = '{0}' OR user2_id = '{0}'", userData.LoginID);
+                            using (MySqlDataReader readed = cmd.ExecuteReader())
+                            {
+                                while (readed.Read())
+                                {
+                                    if (readed.GetString("user1_id") != userData.LoginID)
+                                    {
+                                        Friends_ids.Add(readed.GetString("user1_id"));
+                                    }
+                                    else if (readed.GetString("user2_id") != userData.LoginID)
+                                    {
+                                        Friends_ids.Add(readed.GetString("user2_id"));
+                                    }
+                                }
+                                readed.Close();
+                            }
+
+                            cmd.CommandText = String.Format("SELECT user1_id, user2_id FROM private_channels WHERE user1_id = '{0}' OR user2_id = '{0}'", userData.LoginID);
+                            using (MySqlDataReader readed = cmd.ExecuteReader())
+                            {
+                                while (readed.Read())
+                                {
+                                    if (readed.GetString("user1_id") != userData.LoginID)
+                                    {
+                                        Privates_ids.Add(readed.GetString("user1_id"));
+                                    }
+                                    else if (readed.GetString("user2_id") != userData.LoginID)
+                                    {
+                                        Privates_ids.Add(readed.GetString("user2_id"));
+                                    }
+                                }
+                                readed.Close();
+                            }
+
                             userData.Name = new_nick;
+
+                            foreach (string id in Friends_ids)
+                            {
+                                if (Connection_Handle.userConnectionids.TryGetValue(id, out string ConnectionID))
+                                {
+                                    await Clients.Client(ConnectionID).SendAsync("Friend_updatedName", userData.Name, userData.LoginID);
+                                }
+                            }
+
+                            foreach (string id in Privates_ids)
+                            {
+                                if (Connection_Handle.userConnectionids.TryGetValue(id, out string ConnectionID))
+                                {
+                                    await Clients.Client(ConnectionID).SendAsync("User_Updated_Name", userData.Name, userData.LoginID);
+                                }
+                            }
 
                             foreach (string id in Channel_ids)
                             {
                                 await Clients.Group(id).SendAsync("User_Updated_Name", userData.Name, userData.LoginID);
                             }
+
+
 
                             await Clients.Client(Context.ConnectionId).SendAsync("Update_Name", true, new_nick);
 
@@ -1073,7 +1119,7 @@ namespace Halmid_Server.Hubs
 
                         foreach (string id in Channel_ids)
                         {
-                            await Clients.Group(id).SendAsync("Changed_userStatus", online, true, ApiVariable.IPConnection + "Users/" + userData.LoginID+"/"+ userData.AvatarID+".png");
+                            await Clients.Group(id).SendAsync("Changed_userStatus", online, true, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png");
                         }
 
                         foreach (string id in Privates_ids)
@@ -1088,7 +1134,7 @@ namespace Halmid_Server.Hubs
                         {
                             if (Connection_Handle.userConnectionids.TryGetValue(id, out string ConnectionID))
                             {
-                              await Clients.Client(ConnectionID).SendAsync("Friend_changedStatus", online);
+                                await Clients.Client(ConnectionID).SendAsync("Friend_changedStatus", online);
                             }
                         }
 
@@ -1122,7 +1168,12 @@ namespace Halmid_Server.Hubs
                                 await Groups.RemoveFromGroupAsync(Context.ConnectionId, userData.ChannelID);
                             }
                             await Clients.Group(userData.ChannelID).SendAsync("WritingMessage_Channel", userData.Name, userData.ChannelID, false, userData.LoginID);
-                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", userData.Name + " left the server.", "");
+                            
+                            Dictionary<string, string> msg = new Dictionary<string, string>
+                            {
+                                {"message", userData.Name + " left the server." }
+                            };
+                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", msg, "-1","-1", ApiVariable.IPConnection + "Users/default.png");
                             userData.ChannelID = String.Empty;
                         }
                     }
@@ -1160,7 +1211,7 @@ namespace Halmid_Server.Hubs
                                         user.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                     }
 
-                                    if (readed.GetString("avatar") != string.Empty)
+                                    if (readed.GetString("avatar") != "default")
                                     {
                                         avatar_links.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("loginid") + "/" + readed.GetString("avatar") + ".png");
                                     }
@@ -1248,7 +1299,7 @@ namespace Halmid_Server.Hubs
                             cmd.CommandText = String.Format("DELETE FROM messages_history WHERE idchannel = '{0}'", channelID);
                             cmd.ExecuteScalar();
 
-                            Directory.Delete("C:/xampp/htdocs/" + channelID);
+                            Directory.Delete("C:/xampp/htdocs/Channels/" + channelID);
 
                             foreach (string user in users_in_channel)
                             {
@@ -1298,7 +1349,12 @@ namespace Halmid_Server.Hubs
                                 await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("userLeft_Channel", true, Kicked_userData.LoginID, userData.ChannelID);
                             }
 
-                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", Kicked_userData.Name + " got kicked from server by an Admin.", "", "");
+                            Dictionary<string, string> msg = new Dictionary<string, string>
+                            {
+                                {"message", Kicked_userData.Name + " got kicked from server by an Admin." }
+                            };
+
+                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", msg, "-1", "-1", ApiVariable.IPConnection + "Users/default.png");
                         }
                     }
                 }
@@ -1344,7 +1400,12 @@ namespace Halmid_Server.Hubs
                                 await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("userLeft_Channel", true, Kicked_userData.LoginID, userData.ChannelID);
                             }
 
-                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", $"{banned_name} got banned from server by an Admin for: {reason}", "", "");
+                            Dictionary<string, string> msg = new Dictionary<string, string>
+                            {
+                                {"message", $"{banned_name} got banned from server by an Admin for: {reason}" }
+                            };
+
+                            await Clients.Group(userData.ChannelID).SendAsync("ReceiveMessage", "Server", msg, "-1", "-1", ApiVariable.IPConnection + "Users/default.png");
                         }
                     }
                 }
@@ -1399,7 +1460,7 @@ namespace Halmid_Server.Hubs
                                 {
                                     user.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                 }
-                                if (readed.GetString("avatar") != string.Empty)
+                                if (readed.GetString("avatar") != "default")
                                 {
                                     avatar_links.Add(ApiVariable.IPConnection + "Users/" + readed.GetString("banned_id") + "/" + readed.GetString("avatar") + ".png");
                                 }
@@ -1462,8 +1523,18 @@ namespace Halmid_Server.Hubs
                             Online_Users_inChannel user = new Online_Users_inChannel();
                             user.userID = userData.LoginID;
                             user.Name = userData.Name;
+                            string url;
 
-                            await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("newPending_friendRequest", user, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png");
+                            if (userData.AvatarID != "default")
+                            {
+                                url = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
+                            }
+                            else
+                            {
+                                url = ApiVariable.IPConnection + "Users/default.png";
+                            }
+
+                            await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("newPending_friendRequest", user, url);
                             await Clients.Client(Context.ConnectionId).SendAsync("Sent_friendRequest", true);
                         }
                     }
@@ -1525,9 +1596,30 @@ namespace Halmid_Server.Hubs
                             readed.Close();
                         }
 
-                        await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("new_friendAdded", own_data, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png");
+                        string url;
+
+                        if (userData.AvatarID != "default")
+                        {
+                            url = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
+                        }
+                        else
+                        {
+                            url = ApiVariable.IPConnection + "Users/default.png";
+                        }
+
+                        await Clients.Client(Connection_Handle.userConnectionids[userID]).SendAsync("new_friendAdded", own_data, url);
                         await Clients.Client(Context.ConnectionId).SendAsync("Accepted_friendRequest", userID);
-                        await Clients.Client(Context.ConnectionId).SendAsync("new_friendAdded", friend_data, ApiVariable.IPConnection + "Users/" + userID + "/" + friend_avatar + ".png");
+
+                        if (friend_avatar != "default")
+                        {
+                            url = ApiVariable.IPConnection + "Users/" + userID + "/" + friend_avatar + ".png";
+                        }
+                        else
+                        {
+                            url = ApiVariable.IPConnection + "Users/default.png";
+                        }
+
+                        await Clients.Client(Context.ConnectionId).SendAsync("new_friendAdded", friend_data, url);
                     }
                 }
                 catch (Exception) { }
@@ -1576,6 +1668,7 @@ namespace Halmid_Server.Hubs
                     using (MySqlCommand cmd = Startup.connection.CreateCommand())
                     {
                         Private_Users user = new Private_Users();
+                        string[] urls = new string[2];
 
                         cmd.CommandText = String.Format("SELECT COUNT(*) FROM private_channels WHERE (user1_id = '{0}' AND user2_id = '{1}') OR (user1_id = '{1}' AND user2_id = '{0}')", userID, userData.LoginID);
                         int found = Int32.Parse(cmd.ExecuteScalar().ToString());
@@ -1585,9 +1678,9 @@ namespace Halmid_Server.Hubs
                             cmd.CommandText = String.Format("INSERT INTO private_channels (channelID, user1_id, user2_id) VALUES ('{0}', '{1}' ,'{2}')", id.ToString(), userID, userData.LoginID);
                             cmd.ExecuteScalar();
 
-                            Directory.CreateDirectory("C:/xampp/htdocs/" + id);
+                            Directory.CreateDirectory("C:/xampp/htdocs/Channels/" + id);
 
-                            cmd.CommandText = String.Format("SELECT name, status FROM users WHERE loginid = '{0}'", userID);
+                            cmd.CommandText = String.Format("SELECT name, status, avatar FROM users WHERE loginid = '{0}'", userID);
                             using (MySqlDataReader readed = cmd.ExecuteReader())
                             {
                                 while (readed.Read())
@@ -1603,8 +1696,46 @@ namespace Halmid_Server.Hubs
                                     {
                                         user.Status = readed.GetString("status") == "online" ? "Green" : "Yellow";
                                     }
+
+                                    if (readed.GetString("avatar") != "default")
+                                    {
+                                        urls[0] = ApiVariable.IPConnection + "Users/" + userID + "/" + readed.GetString("avatar") + ".png";
+                                    }
+                                    else
+                                    {
+                                        urls[0] = ApiVariable.IPConnection + "Users/default.png";
+                                    }
                                 }
                                 readed.Close();
+                            }
+
+                            if (Connection_Handle.userConnectionids.TryGetValue(userID, out string ConnectionID))
+                            {
+                                Private_Users user1 = new Private_Users();
+                                user1.Name = userData.Name;
+                                user1.userID = userData.LoginID;
+                                user1.channelID = id.ToString();
+                                cmd.CommandText = String.Format("SELECT status FROM users WHERE loginid = '{0}'", userData.LoginID);
+                                string status = cmd.ExecuteScalar().ToString();
+                                if (status == "offline")
+                                {
+                                    user1.Status = "Gray";
+                                }
+                                else
+                                {
+                                    user1.Status = status == "online" ? "Green" : "Yellow";
+                                }
+
+                                if (userData.AvatarID != "default")
+                                {
+                                    urls[1] = ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png";
+                                }
+                                else
+                                {
+                                    urls[1] = ApiVariable.IPConnection + "Users/default.png";
+                                }
+
+                                await Clients.Client(ConnectionID).SendAsync("Checked_privateChannel", user1, found, urls[1], userData.LoginID);
                             }
                         }
                         else
@@ -1623,7 +1754,7 @@ namespace Halmid_Server.Hubs
                             }
                         }
 
-                        await Clients.Client(Context.ConnectionId).SendAsync("Checked_privateChannel", user, found);
+                        await Clients.Client(Context.ConnectionId).SendAsync("Checked_privateChannel", user, found, urls[0], userData.LoginID);
 
                     }
                 }
@@ -1683,6 +1814,16 @@ namespace Halmid_Server.Hubs
                             readed.Close();
                         }
 
+                        cmd.CommandText = String.Format("SELECT channelID FROM private_channels WHERE user1_id = '{0}' OR user2_id = '{0}';", userData.LoginID);
+                        using (MySqlDataReader readed = cmd.ExecuteReader())
+                        {
+                            while (readed.Read())
+                            {
+                                channel_ids.Add(readed.GetString("channelID"));
+                            }
+                            readed.Close();
+                        }
+
                         cmd.CommandText = String.Format("SELECT user1_id, user2_id FROM friends WHERE user1_id = '{0}' OR user2_id = '{0}'", userData.LoginID);
                         using (MySqlDataReader readed = cmd.ExecuteReader())
                         {
@@ -1734,11 +1875,11 @@ namespace Halmid_Server.Hubs
                         }
 
                         foreach (string id in channel_ids)
-                        {                    
+                        {
                             await Clients.Group(id).SendAsync("User_changedAvatar", userData.LoginID, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + ImageID + ".png");
                         }
 
-                        if(userData.ChannelID == null || userData.ChannelID == String.Empty)
+                        if (userData.ChannelID == null || userData.ChannelID == String.Empty)
                         {
                             await Clients.Client(Context.ConnectionId).SendAsync("User_changedAvatar", userData.LoginID, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + ImageID + ".png");
                         }
@@ -1907,7 +2048,7 @@ namespace Halmid_Server.Hubs
                     Console.WriteLine(userData.Name + " logged in with ID: " + userData.LoginID + " / " + Context.ConnectionId);
                 }
             }
-            catch (Exception e) { Console.WriteLine(e); }
+            catch (Exception) { }
         }
     }
 }

@@ -905,11 +905,7 @@ namespace Halmid_Client
         }
         private void Download_Update(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Start_Updater.Start();
-            }
-            catch (Exception) { }
+           Start_Updater.Start();
         }
         private async void TriggerTextChanged(object sender, TextChangedEventArgs e)
         {

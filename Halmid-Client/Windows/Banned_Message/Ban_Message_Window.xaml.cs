@@ -21,6 +21,7 @@ namespace Halmid_Client.Windows.Banned_Message
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            this.Focus();
             Ban_Reason.Text = ban_reason;
             Ban_Duration.Text = ban_duration;
             Ban_Admin.Text = ban_admin;

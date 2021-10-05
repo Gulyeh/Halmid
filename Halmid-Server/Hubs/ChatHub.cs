@@ -795,7 +795,7 @@ namespace Halmid_Server.Hubs
 
                                 if (!readed.IsDBNull(readed.GetOrdinal("image")))
                                 {
-                                    msg.ImageID = ApiVariable.IPConnection + "" + userData.ChannelID + "/" + readed.GetString("image") + ".png";
+                                    msg.ImageID = ApiVariable.IPConnection + "Channels/" + userData.ChannelID + "/" + readed.GetString("image") + ".png";
                                 }
 
                                 if (readed.GetString("avatar") != "default")

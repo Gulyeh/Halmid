@@ -46,13 +46,75 @@ namespace Halmid_Client.Variables
     {
         public static ObservableCollection<ChannelList> Channels = new ObservableCollection<ChannelList>();
     }
-    public class Online_Users_inChannel
+    public class Online_Users_inChannel : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string userID { get; set; }
-        public string Status { get; set; }
-        public BitmapImage Avatar {get; set;}
-        public string isAdmin { get; set; }
+        private string name;
+        public string Name
+        {
+            get { return name; }
+            set
+            {
+                if (name == value) return;
+                name = value;
+                NotifyPropertyChanged("Name");
+            }
+        }
+        private string _userID;
+        public string userID
+        {
+            get { return _userID; }
+            set
+            {
+                if (_userID == value) return;
+                _userID = value;
+                NotifyPropertyChanged("userID");
+            }
+        }
+
+        private string status;
+        public string Status
+        {
+            get { return status; }
+            set
+            {
+                if (status == value) return;
+                status = value;
+                NotifyPropertyChanged("Status");
+            }
+        }
+
+        private BitmapImage avatar;
+        public BitmapImage Avatar
+        {
+            get { return avatar; }
+            set
+            {
+                if (avatar == value) return;
+                avatar = value;
+                NotifyPropertyChanged("Avatar");
+            }
+        }
+
+        private string _isAdmin;
+        public string isAdmin
+        {
+            get { return _isAdmin; }
+            set
+            {
+                if (_isAdmin == value) return;
+                _isAdmin = value;
+                NotifyPropertyChanged("isAdmin");
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
     public class Private_Users
     {

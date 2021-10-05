@@ -56,13 +56,11 @@ namespace Halmid_Client.Functions
                     Pass = Global_Variables.api_pass
                 };
                 string stringPayload = JsonConvert.SerializeObject(data);
-                Console.WriteLine(stringPayload);
 
                 var httpClient = new HttpClient();
                 var httpContent = new StringContent(stringPayload, Encoding.UTF8, "application/json");
                 HttpResponseMessage msg = await httpClient.PostAsync(Global_Variables.api_accessurl, httpContent);
                 var response = JObject.Parse(await msg.Content.ReadAsStringAsync());
-                Console.WriteLine(response["Token"].ToString());
                 return response["Token"].ToString();
             }
             catch (Exception e) { Console.WriteLine(e); }

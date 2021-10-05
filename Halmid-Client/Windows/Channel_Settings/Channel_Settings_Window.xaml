@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Halmid_Client.Windows.Channel_Settings"
         mc:Ignorable="d"
-        Title="Helmid" Height="470" Width="500"
+        Title="Helmid" Height="330" Width="500"
         ResizeMode="NoResize"
         WindowStyle="None"
         Background="Transparent"
@@ -37,12 +37,7 @@
     <Grid>
         <Border Background="#1f2731" CornerRadius="20 20 20 20" BorderThickness="0">
             <StackPanel Orientation="Vertical">
-            <StackPanel Orientation="Horizontal">
-                <StackPanel Orientation="Vertical" VerticalAlignment="Top" Width="500" Margin="0,20,0,0">
-                    <Image Source="pack://application:,,,/Images/Avatars/logo.png" Height="100" HorizontalAlignment="Center"/>
-                </StackPanel>
-            </StackPanel>
-            <TextBlock Text="Invite Hash" FontSize="15" Foreground="White" FontFamily="TYPOGRAPH PRO" Margin="50,20,0,0"/>
+                <TextBlock Text="Invite Hash" FontSize="15" Foreground="White" FontFamily="TYPOGRAPH PRO" Margin="50,20,0,0"/>
             <Line X1="380" Stroke="White" StrokeThickness="0.5" HorizontalAlignment="Center" Margin="-20,14,0,0"/>
             <Border CornerRadius="20" Background="White" Width="440" Margin="0,20,0,0">
                 <StackPanel>

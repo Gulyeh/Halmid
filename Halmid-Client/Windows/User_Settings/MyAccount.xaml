@@ -77,7 +77,7 @@
                             </DockPanel>
                         </Border>
                     </DockPanel>
-                    <TextBlock Name="Nick_Status" FontSize="10" Foreground="White" FontFamily="TYPOGRAPH PRO" Margin="0,5,200,0" HorizontalAlignment="Right"/>
+                    <TextBlock Name="Nick_Status" FontSize="10" Foreground="White" FontFamily="TYPOGRAPH PRO" Margin="550,5,0,0" HorizontalAlignment="Center"/>
                     <TextBlock Text="Security" FontSize="30" Foreground="White" FontFamily="TYPOGRAPH PRO" Margin="-560,40,0,0" HorizontalAlignment="Center"/>
                     <Line X1="680" Stroke="White" StrokeThickness="0.5" HorizontalAlignment="Center" Margin="-10,14,0,0"/>
                     <Border Height="40" CornerRadius="20" Visibility="Visible" Background="#131a20" Margin="0,40,0,0" HorizontalAlignment="Center" Width="400">

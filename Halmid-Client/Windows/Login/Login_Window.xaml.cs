@@ -85,7 +85,6 @@ namespace Halmid_Client.Windows.Login
         {
             if(KeepLogged.IsChecked == true)
             {
-                this.Hide();
                 Login();
             }
         }
@@ -172,10 +171,17 @@ namespace Halmid_Client.Windows.Login
                     {
                         string LoginID = id.Text;
                         LoginButton.IsEnabled = false;
+                        key.IsEnabled = false;
+                        user.IsEnabled = false;
+                        
                         try
                         {
                             Create_HubConnection.NewConnection();
                             await Connect_Server.Connect();
+                            if (KeepLogged.IsChecked == true)
+                            {
+                                this.Hide();
+                            }
                             await Connector.connection.SendAsync("EnterKey", toSha256.sha256(key.Text), Connector.connection.ConnectionId);
                             Connector.connection.On<bool, string>("CheckKey", async (data, version) =>
                             {
@@ -216,6 +222,8 @@ namespace Halmid_Client.Windows.Login
                                             case "wrong_login":
                                                 await Connector.connection.DisposeAsync();
                                                 LoginButton.IsEnabled = true;
+                                                key.IsEnabled = true;
+                                                user.IsEnabled = true;
                                                 errormsg.Text = "Wrong login";
                                                 if (KeepLogged.IsChecked == true)
                                                 {
@@ -225,6 +233,8 @@ namespace Halmid_Client.Windows.Login
                                             case "db_offline":
                                                 await Connector.connection.DisposeAsync();
                                                 LoginButton.IsEnabled = true;
+                                                key.IsEnabled = true;
+                                                user.IsEnabled = true;
                                                 errormsg.Text = "Database is offline";
                                                 if (KeepLogged.IsChecked == true)
                                                 {
@@ -241,6 +251,8 @@ namespace Halmid_Client.Windows.Login
                                     errormsg.Text = "Wrong entry key";
                                     await Connector.connection.StopAsync();
                                     LoginButton.IsEnabled = true;
+                                    key.IsEnabled = true;
+                                    user.IsEnabled = true;
                                     if (KeepLogged.IsChecked == true)
                                     {
                                         this.Show();
@@ -252,6 +264,8 @@ namespace Halmid_Client.Windows.Login
                         {
                             await Connector.connection.DisposeAsync();
                             LoginButton.IsEnabled = true;
+                            key.IsEnabled = true;
+                            user.IsEnabled = true;
                             errormsg.Text = "Cannot reach the server";
                             if (KeepLogged.IsChecked == true)
                             {

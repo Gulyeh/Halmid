@@ -18,7 +18,6 @@ using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -132,7 +131,8 @@ namespace Halmid_Client
             {
                 Profile_Status.Background = Brushes.Gray;
             }
-            else{
+            else
+            {
                 Profile_Status.Background = UserData.Status == "Green" ? Brushes.Green : Brushes.Yellow;
             }
             Profile_Image.ImageSource = UserData.Avatar;
@@ -173,7 +173,8 @@ namespace Halmid_Client
                 {
                     if (logged_out == false)
                     {
-                        this.Dispatcher.BeginInvoke(new Action(() => { 
+                        this.Dispatcher.BeginInvoke(new Action(() =>
+                        {
                             Loading_Window Loading = new Loading_Window("Reconnect");
                             Loading.Show();
                             Close();
@@ -183,67 +184,81 @@ namespace Halmid_Client
                 };
                 Connector.connection.On<bool>("clientUpdate_Data", isUpdate =>
                 {
-                    if(isUpdate)
+                    if (isUpdate)
                     {
                         Update_Button.Visibility = Visibility.Visible;
                     }
                 });
-                Connector.connection.On<string, string, string, string, string>("ReceiveMessage", (name, message, messid, userID, avatar) =>
-                {
-                    Application.Current.Dispatcher.Invoke((Action)async delegate
-                    {
-                        MessageDataView data = new MessageDataView();
+                Connector.connection.On<string, Dictionary<string, string>, string, string, string>("ReceiveMessage", (name, message, messid, userID, avatar) =>
+                 {
+                     Application.Current.Dispatcher.Invoke((Action)async delegate
+                     {
+                         MessageDataView data = new MessageDataView();
 
-                        if (MessageSender_Data.Find(x => x.userID == userID) != null)
-                        {
-                            data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == userID).Avatar;
-                        }
-                        else
-                        {
-                            MessageSender_Handler new_user = new MessageSender_Handler();
-                            new_user.userID = data.Sender_id;
-                            new_user.Avatar = await ToBitmapImage.Coverter(480, avatar);
-                            data.Avatar = new_user.Avatar;
-                            MessageSender_Data.Add(new_user);
-                        }
-                        data.MessageID = messid;
-                        data.Sender_id = userID;
-                        data.Content = message;
-                        data.From = name;
-                        data.Timestamp = DateTime.Now.ToString("dd/MM/yyyy - H:mm");
-                        data.Colored = UserData.LoginID == userID ? "DarkGreen" : "White";
-                        MessagesData.Add(data);
-                        ListViewMessages.Items.MoveCurrentToLast();
-                        ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
-                    });
-                });
-                Connector.connection.On<string, string, string, string, string, string>("Receive_ImageMessage", async (name, message, imageID, messid, userID, avatar) =>
-                {
-                    MessageDataView data = new MessageDataView();
-                    if (MessageSender_Data.Find(x => x.userID == userID) != null)
-                    {
-                        data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == userID).Avatar;
-                    }
-                    else
-                    {
-                        MessageSender_Handler new_user = new MessageSender_Handler();
-                        new_user.userID = data.Sender_id;
-                        new_user.Avatar = await ToBitmapImage.Coverter(480, avatar);
-                        data.Avatar = new_user.Avatar;
-                        MessageSender_Data.Add(new_user);
-                    }
-                    data.ImageSource = await ToBitmapImage.Coverter(1280, imageID);
-                    data.MessageID = messid;
-                    data.Sender_id = userID;
-                    data.Content = message;
-                    data.From = name;
-                    data.Timestamp = DateTime.Now.ToString("dd/MM/yyyy - H:mm");
-                    data.Colored = UserData.LoginID == userID ? "DarkGreen" : "White";
-                    data.ImageID = imageID;
-                    MessagesData.Add(data);
-                    ListViewMessages.Items.MoveCurrentToLast();
-                    ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
-                });
+                         if (MessageSender_Data.Find(x => x.userID == userID) != null)
+                         {
+                             data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == userID).Avatar;
+                         }
+                         else
+                         {
+                             MessageSender_Handler new_user = new MessageSender_Handler();
+                             new_user.userID = data.Sender_id;
+                             new_user.Avatar = await ToBitmapImage.Coverter(480, avatar);
+                             data.Avatar = new_user.Avatar;
+                             MessageSender_Data.Add(new_user);
+                         }
+                         data.MessageID = messid;
+                         data.Sender_id = userID;
+                         if (userID != "-1")
+                         {
+                             data.Content = CryptMessage.Decrypt(Convert.FromBase64String(message["message"]), Convert.FromBase64String(message["key"].Split('!')[0]), Convert.FromBase64String(message["key"].Split('!')[1]));
+                         }
+                         else
+                         {
+                             data.Content = message["message"];
+                         }
+                         data.From = name;
+                         data.Timestamp = DateTime.Now.ToString("dd/MM/yyyy - H:mm");
+                         data.Colored = UserData.LoginID == userID ? "DarkGreen" : "White";
+                         MessagesData.Add(data);
+                         ListViewMessages.Items.MoveCurrentToLast();
+                         ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
+                     });
+                 });
+                Connector.connection.On<string, Dictionary<string, string>, string, string, string, string>("Receive_ImageMessage", async (name, message, imageID, messid, userID, avatar) =>
+                 {
+                     MessageDataView data = new MessageDataView();
+                     if (MessageSender_Data.Find(x => x.userID == userID) != null)
+                     {
+                         data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == userID).Avatar;
+                     }
+                     else
+                     {
+                         MessageSender_Handler new_user = new MessageSender_Handler();
+                         new_user.userID = data.Sender_id;
+                         new_user.Avatar = await ToBitmapImage.Coverter(480, avatar);
+                         data.Avatar = new_user.Avatar;
+                         MessageSender_Data.Add(new_user);
+                     }
+                     data.ImageSource = await ToBitmapImage.Coverter(1280, imageID);
+                     data.MessageID = messid;
+                     data.Sender_id = userID;
+                     if (userID != "-1")
+                     {
+                         data.Content = CryptMessage.Decrypt(Convert.FromBase64String(message["message"]), Convert.FromBase64String(message["key"].Split('!')[0]), Convert.FromBase64String(message["key"].Split('!')[1]));
+                     }
+                     else
+                     {
+                         data.Content = message["message"];
+                     }
+                     data.From = name;
+                     data.Timestamp = DateTime.Now.ToString("dd/MM/yyyy - H:mm");
+                     data.Colored = UserData.LoginID == userID ? "DarkGreen" : "White";
+                     data.ImageID = imageID;
+                     MessagesData.Add(data);
+                     ListViewMessages.Items.MoveCurrentToLast();
+                     ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
+                 });
                 Connector.connection.On<string, string, bool, string>("WritingMessage_Channel", (name, roomid, isWriting, userID) =>
                 {
                     Application.Current.Dispatcher.Invoke((Action)delegate
@@ -269,7 +284,7 @@ namespace Halmid_Client
                         ListViewChannels.Items.MoveCurrentToLast();
                         ListViewChannels.ScrollIntoView(ListViewChannels.Items[ListViewChannels.Items.Count - 1]);
 
-                        await Connector.connection.SendAsync("Switch_Channel", _ChannelList.Channels[ListViewChannels.Items.Count - 1].ChannelHash);
+                        await Connector.connection.SendAsync("Switch_Channel", _ChannelList.Channels[ListViewChannels.Items.Count - 1].ChannelHash, "channel");
                     }
                 });
                 Connector.connection.On<Online_Users_inChannel>("User_Offline", user =>
@@ -290,130 +305,98 @@ namespace Halmid_Client
                     }
                     ListViewUsers.ItemsSource = OnlineUsers_Data.Where(x => x.Status != "Gray");
                 });
-                Connector.connection.On<bool, ObservableCollection<MessageDataView>, ObservableCollection<Online_Users_inChannel>, string, List<string>, List<string>>("Switched_Channel", async(switched, messages, users, isAdmin, msg_url, online_url) =>
-                {
-                    try
-                    {
-                        if (switched)
-                        {
-                            int i = 0;
-                            int j = 0;
-                            MessageSender_Data.Clear();
-                            await Task.Run(async () => {
-                                await this.Dispatcher.BeginInvoke(new ThreadStart(async() =>
-                                {
-                                    foreach (MessageDataView data in messages)
-                                    {
-                                        if(MessageSender_Data.Find(x => x.userID == data.Sender_id) != null)
-                                        {
-                                            data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == data.Sender_id).Avatar;
-                                        }
-                                        else
-                                        {
-                                            MessageSender_Handler new_user = new MessageSender_Handler();
-                                            new_user.userID = data.Sender_id;
-                                            new_user.Avatar = await ToBitmapImage.Coverter(480, msg_url[i]);
-                                            data.Avatar = new_user.Avatar;
-                                            MessageSender_Data.Add(new_user);
-                                        }
+                Connector.connection.On<bool, ObservableCollection<MessageDataView>, Dictionary<string, string>, ObservableCollection<Online_Users_inChannel>, string, List<string>, List<string>>("Switched_Channel", async (switched, messages, crypted_data, users, isAdmin, msg_url, online_url) =>
+                 {
+                     try
+                     {
+                         if (switched)
+                         {
+                             int i = 0;
+                             int j = 0;
+                             MessageSender_Data.Clear();
 
-                                        if (data.ImageID != null && data.ImageID != String.Empty)
-                                        {
-                                            data.ImageSource = await ToBitmapImage.Coverter(480, data.ImageID);
-                                        }
-                                        i++;
-                                    }
+                             await Task.Run(async () =>
+                             {
+                                 await this.Dispatcher.BeginInvoke(new ThreadStart(async () =>
+                                 {
+                                     foreach (MessageDataView data in messages)
+                                     {
+                                         if (MessageSender_Data.Find(x => x.userID == data.Sender_id) != null)
+                                         {
+                                             data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == data.Sender_id).Avatar;
+                                         }
+                                         else
+                                         {
+                                             MessageSender_Handler new_user = new MessageSender_Handler();
+                                             new_user.userID = data.Sender_id;
+                                             new_user.Avatar = await ToBitmapImage.Coverter(480, msg_url[i]);
+                                             data.Avatar = new_user.Avatar;
+                                             MessageSender_Data.Add(new_user);
+                                         }
 
-                                    foreach (Online_Users_inChannel data in users)
-                                    {
-                                        data.Avatar = await ToBitmapImage.Coverter(960, online_url[j]);
-                                        j++;
-                                    }
-                                }));
-                            });
+                                         if (data.ImageID != null && data.ImageID != String.Empty)
+                                         {
+                                             data.ImageSource = await ToBitmapImage.Coverter(480, data.ImageID);
+                                         }
 
-                            MessagesData.Clear();
-                            OnlineUsers_Data.Clear();
-                            Channel_Name.Text = "#" + _ChannelList.Channels[channelindex].Name;
-                            UserData.ChannelID = _ChannelList.Channels[channelindex].ChannelHash;
-                            MessagesData = messages;
-                            OnlineUsers_Data = users;
-                            ListViewUsers.ItemsSource = OnlineUsers_Data;
-                            ListViewMessages.ItemsSource = MessagesData;
-                            ListViewMessages.Items.MoveCurrentToLast();
-                            ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
-                            msg.Opacity = 0.3;
-                            msg.Text = "Message " + Channel_Name.Text;
-                            msg.IsEnabled = true;
-                            WritingUsers_Text.Text = "";
-                            Loading_Panel.Visibility = Visibility.Collapsed;
-                            Global_Variables.channelType = "channel";
-                            channelSettings_Button.Visibility = Visibility.Visible;
+                                         data.Content = CryptMessage.Decrypt(Convert.FromBase64String(crypted_data["message" + i]), Convert.FromBase64String(crypted_data["key" + i].Split('!')[0]), Convert.FromBase64String(crypted_data["key" + i].Split('!')[1]));
+                                         i++;
+                                     }
 
-                            if (Online_Grid.Visibility == Visibility.Collapsed)
-                            {
-                                Online_Grid.Visibility = Visibility.Visible;
-                                Launch_Cover.Visibility = Visibility.Hidden;
-                                msg_grid.SetValue(Grid.ColumnSpanProperty, 1);
-                            }
+                                     foreach (Online_Users_inChannel data in users)
+                                     {
+                                         data.Avatar = await ToBitmapImage.Coverter(960, online_url[j]);
+                                         j++;
+                                     }
+                                 }));
+                             });
 
-                            if (isAdmin == UserData.LoginID)
-                            {
-                                leaveServer_Button.Visibility = Visibility.Hidden;
-                            }
-                            else
-                            {
-                                leaveServer_Button.Visibility = Visibility.Visible;
-                            }
+                             MessagesData.Clear();
+                             OnlineUsers_Data.Clear();
+                             Channel_Name.Text = "#" + _ChannelList.Channels[channelindex].Name;
+                             UserData.ChannelID = _ChannelList.Channels[channelindex].ChannelHash;
+                             MessagesData = messages;
+                             OnlineUsers_Data = users;
+                             ListViewUsers.ItemsSource = OnlineUsers_Data;
+                             ListViewMessages.ItemsSource = MessagesData;
+                             ListViewMessages.Items.MoveCurrentToLast();
+                             ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
+                             msg.Opacity = 0.3;
+                             msg.Text = "Message " + Channel_Name.Text;
+                             msg.IsEnabled = true;
+                             WritingUsers_Text.Text = "";
+                             Loading_Panel.Visibility = Visibility.Collapsed;
+                             Global_Variables.channelType = "channel";
+                             channelSettings_Button.Visibility = Visibility.Visible;
 
-                            ListViewMessages.Visibility = Visibility.Visible;
-                            ListViewMessages.Items.Refresh();
-                        }
-                    }
-                    catch (Exception e) { MessageBox.Show(e.ToString()); }
-                });
-                Connector.connection.On<bool, string, string, ObservableCollection<MessageDataView>, ObservableCollection<Online_Users_inChannel>, List<string>, List<string>, string>("Joined_Channel", async (joined, channelname, channelid, messages, users, msg_url, online_url, avatar_url) =>
+                             if (Online_Grid.Visibility == Visibility.Collapsed)
+                             {
+                                 Online_Grid.Visibility = Visibility.Visible;
+                                 Launch_Cover.Visibility = Visibility.Hidden;
+                                 msg_grid.SetValue(Grid.ColumnSpanProperty, 1);
+                             }
+
+                             if (isAdmin == UserData.LoginID)
+                             {
+                                 leaveServer_Button.Visibility = Visibility.Hidden;
+                             }
+                             else
+                             {
+                                 leaveServer_Button.Visibility = Visibility.Visible;
+                             }
+
+                             ListViewMessages.Visibility = Visibility.Visible;
+                             ListViewMessages.Items.Refresh();
+                         }
+                     }
+                     catch (Exception e) { MessageBox.Show(e.ToString()); }
+                 });
+                Connector.connection.On<bool, string, string, string>("Joined_Channel", async (joined, channelname, channelid, avatar_url) =>
                 {
                     try
                     {
                         if (joined)
                         {
-                            int i = 0;
-                            int j = 0;
-                            await Task.Run(async () =>
-                            {
-                                await this.Dispatcher.BeginInvoke(new ThreadStart(async () =>
-                                {
-                                    MessageSender_Data.Clear();
-                                    foreach (MessageDataView data in messages)
-                                    {
-                                        if (MessageSender_Data.Find(x => x.userID == data.Sender_id) != null)
-                                        {
-                                            data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == data.Sender_id).Avatar;
-                                        }
-                                        else
-                                        {
-                                            MessageSender_Handler new_user = new MessageSender_Handler();
-                                            new_user.userID = data.Sender_id;
-                                            new_user.Avatar = await ToBitmapImage.Coverter(480, msg_url[i]);
-                                            data.Avatar = new_user.Avatar;
-                                            MessageSender_Data.Add(new_user);
-                                        }
-                                        if (data.ImageID != null && data.ImageID != String.Empty)
-                                        {
-                                            data.ImageSource = await ToBitmapImage.Coverter(480, data.ImageID);
-                                        }
-                                        i++;
-                                    }
-
-                                    foreach (Online_Users_inChannel data in users)
-                                    {
-                                        data.Avatar = await ToBitmapImage.Coverter(960, online_url[j]);
-                                        j++;
-                                    }
-                                }));
-                            });
-
                             UserData.ChannelID = channelid;
                             newChannel.Close();
 
@@ -424,31 +407,7 @@ namespace Halmid_Client
                             Channel_Name.Text = "# " + channelname;
                             _ChannelList.Channels.Add(channel);
 
-                            MessagesData.Clear();
-                            OnlineUsers_Data.Clear();
-                            OnlineUsers_Data = users;
-                            MessagesData = messages;
-                            ListViewMessages.ItemsSource = MessagesData;
-                            ListViewUsers.ItemsSource = OnlineUsers_Data;
-                            ListViewMessages.Items.MoveCurrentToLast();
-                            ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
-                            msg.Opacity = 0.3;
-                            msg.Text = "Message " + Channel_Name.Text;
-                            msg.IsEnabled = true;
-                            WritingUsers_Text.Text = "";
-
-                            Loading_Panel.Visibility = Visibility.Collapsed;
-                            Global_Variables.channelType = "channel";
-                            channelSettings_Button.Visibility = Visibility.Visible;
-
-                            if (Online_Grid.Visibility == Visibility.Collapsed)
-                            {
-                                Online_Grid.Visibility = Visibility.Visible;
-                                Launch_Cover.Visibility = Visibility.Hidden;
-                                msg_grid.SetValue(Grid.ColumnSpanProperty, 1);
-                            }
-
-                            leaveServer_Button.Visibility = Visibility.Visible;
+                            await Connector.connection.SendAsync("Switch_Channel", channelid, "channel");
                         }
                         else
                         {
@@ -457,7 +416,7 @@ namespace Halmid_Client
                             newChannel.wrong_text.Visibility = Visibility.Visible;
                         }
                     }
-                    catch(Exception e) { MessageBox.Show(e.ToString()); }
+                    catch (Exception e) { MessageBox.Show(e.ToString()); }
                 });
                 Connector.connection.On<bool>("Check_channelAdmin_user", isAdmin =>
                 {
@@ -499,23 +458,36 @@ namespace Halmid_Client
                     }
                 });
                 Connector.connection.On<string, string>("User_Updated_Name", (name, userid) =>
-                {
-                    var found = OnlineUsers_Data.FirstOrDefault(x => x.userID == userid);
-                    if (found != null)
-                    {
-                        found.Name = name;
-                    }
+                  {
+                      try
+                      {
+                          var found = OnlineUsers_Data.FirstOrDefault(x => x.userID == userid);
+                          var found1 = _Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.userID == userid);
 
-                    foreach (MessageDataView data in MessagesData)
-                    {
-                        if (data.Sender_id == userid)
-                        {
-                            data.From = name;
-                        }
-                    }
-                    ListViewMessages.Items.Refresh();
-                    ListViewUsers.Items.Refresh();
-                });
+                          if (found != null)
+                          {
+                              found.Name = name;
+                              ListViewUsers.Items.Refresh();
+                          }
+
+                          if (found1 != null)
+                          {
+                              found1.Name = name;
+                              ListViewPrivates.ItemsSource = _Private_Users.PrivateUsers_Data;
+                              ListViewPrivates.Items.Refresh();
+                          }
+
+                          foreach (MessageDataView data in MessagesData)
+                          {
+                              if (data.Sender_id == userid)
+                              {
+                                  data.From = name;
+                              }
+                          }
+                          ListViewMessages.ItemsSource = MessagesData;
+                          ListViewMessages.Items.Refresh();
+                      }catch(Exception e) { MessageBox.Show(e.ToString()); }
+                  });
                 Connector.connection.On<bool, string>("Updated_Login", (isUpdated, username) =>
                     {
                         if (isUpdated)
@@ -527,7 +499,6 @@ namespace Halmid_Client
                 {
                     if (isUpdated)
                     {
-                        MessageBox.Show("ok");
                         var found = _ChannelList.Channels.FirstOrDefault(x => x.ChannelHash == id);
                         if (found != null)
                         {
@@ -725,83 +696,90 @@ namespace Halmid_Client
                     }
                     ListViewPrivates.Items.Refresh();
                 });
-                Connector.connection.On<Private_Users, int>("Checked_privateChannel", async (user, found) =>
+                Connector.connection.On<Private_Users, int, string, string>("Checked_privateChannel", async (user, found, url, caller) =>
                 {
                     if (found == 0)
                     {
+                        user.Avatar = await ToBitmapImage.Coverter(480, url);
                         _Private_Users.PrivateUsers_Data.Insert(0, user);
                         ListViewPrivates.Items.Refresh();
                     }
 
-                    await Connector.connection.SendAsync("Switch_Channel", user.channelID, "private");
-                });
-                Connector.connection.On<bool, ObservableCollection<MessageDataView>, string, List<string>>("Switched_privateChannel", async(isSwitched, messages, channelID, msg_url) =>
-                {
-                    if (isSwitched)
+                    if (caller == UserData.LoginID)
                     {
-                        int i = 0;
-                        MessageSender_Data.Clear();
-                        await Task.Run(async () => {
-                            await this.Dispatcher.BeginInvoke(new ThreadStart(async () =>
-                            {
-                                foreach (MessageDataView data in messages)
-                                {
-                                    if (MessageSender_Data.Find(x => x.userID == data.Sender_id) != null)
-                                    {
-                                        data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == data.Sender_id).Avatar;
-                                    }
-                                    else
-                                    {
-                                        MessageSender_Handler new_user = new MessageSender_Handler();
-                                        new_user.userID = data.Sender_id;
-                                        new_user.Avatar = await ToBitmapImage.Coverter(480, msg_url[i]);
-                                        data.Avatar = new_user.Avatar;
-                                        MessageSender_Data.Add(new_user);
-                                    }
-
-                                    if (data.ImageID != null && data.ImageID != String.Empty)
-                                    {
-                                        data.ImageSource = await ToBitmapImage.Coverter(480, data.ImageID);
-                                    }
-                                    i++;
-                                }
-                            }));
-                        });
-
-                        Loading_Panel.Visibility = Visibility.Collapsed;
-                        MessagesData.Clear();
-                        OnlineUsers_Data.Clear();
-                        Channel_Name.Text = "#" + _Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.channelID == channelID).Name;
-                        UserData.ChannelID = channelID;
-                        MessagesData = messages;
-                        ListViewUsers.ItemsSource = OnlineUsers_Data;
-                        ListViewMessages.ItemsSource = MessagesData;
-                        ListViewMessages.Items.MoveCurrentToLast();
-                        ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
-                        msg.Opacity = 0.3;
-                        msg.Text = "Message " + Channel_Name.Text;
-                        WritingUsers_Text.Text = "";
-                        msg.IsEnabled = true;
-                        Global_Variables.channelType = "private";
-
-                        leaveServer_Button.Visibility = Visibility.Hidden;
-                        channelSettings_Button.Visibility = Visibility.Hidden;
-                        if (_Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.channelID == channelID).isBlocked == "Unblock User")
-                        {
-                            msg.IsEnabled = false;
-                            msg.Text = "You cannot send message to blocked user";
-                        }
-
-                        if (Launch_Cover.Visibility == Visibility.Visible)
-                        {
-                            Launch_Cover.Visibility = Visibility.Hidden;
-                        }
-                        Online_Grid.Visibility = Visibility.Collapsed;
-                        msg_grid.SetValue(Grid.ColumnSpanProperty, 2);
-                        ListViewMessages.Visibility = Visibility.Visible;
-                        ListViewMessages.Items.Refresh();
+                        await Connector.connection.SendAsync("Switch_Channel", user.channelID, "private");
                     }
                 });
+                Connector.connection.On<bool, ObservableCollection<MessageDataView>, Dictionary<string, string>, string, List<string>>("Switched_privateChannel", async (isSwitched, messages, crypted_data, channelID, msg_url) =>
+                 {
+                     if (isSwitched)
+                     {
+                         int i = 0;
+                         MessageSender_Data.Clear();
+                         await Task.Run(async () =>
+                         {
+                             await this.Dispatcher.BeginInvoke(new ThreadStart(async () =>
+                             {
+                                 foreach (MessageDataView data in messages)
+                                 {
+                                     if (MessageSender_Data.Find(x => x.userID == data.Sender_id) != null)
+                                     {
+                                         data.Avatar = MessageSender_Data.FirstOrDefault(x => x.userID == data.Sender_id).Avatar;
+                                     }
+                                     else
+                                     {
+                                         MessageSender_Handler new_user = new MessageSender_Handler();
+                                         new_user.userID = data.Sender_id;
+                                         new_user.Avatar = await ToBitmapImage.Coverter(480, msg_url[i]);
+                                         data.Avatar = new_user.Avatar;
+                                         MessageSender_Data.Add(new_user);
+                                     }
+
+                                     if (data.ImageID != null && data.ImageID != String.Empty)
+                                     {
+                                         data.ImageSource = await ToBitmapImage.Coverter(480, data.ImageID);
+                                     }
+
+                                     data.Content = CryptMessage.Decrypt(Convert.FromBase64String(crypted_data["message" + i]), Convert.FromBase64String(crypted_data["key" + i].Split('!')[0]), Convert.FromBase64String(crypted_data["key" + i].Split('!')[1]));
+                                     i++;
+                                 }
+                             }));
+                         });
+
+                         Loading_Panel.Visibility = Visibility.Collapsed;
+                         MessagesData.Clear();
+                         OnlineUsers_Data.Clear();
+                         Channel_Name.Text = "#" + _Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.channelID == channelID).Name;
+                         UserData.ChannelID = channelID;
+                         MessagesData = messages;
+                         ListViewUsers.ItemsSource = OnlineUsers_Data;
+                         ListViewMessages.ItemsSource = MessagesData;
+                         ListViewMessages.Items.MoveCurrentToLast();
+                         ListViewMessages.ScrollIntoView(ListViewMessages.Items.CurrentItem);
+                         msg.Opacity = 0.3;
+                         msg.Text = "Message " + Channel_Name.Text;
+                         WritingUsers_Text.Text = "";
+                         msg.IsEnabled = true;
+                         Global_Variables.channelType = "private";
+
+                         leaveServer_Button.Visibility = Visibility.Hidden;
+                         channelSettings_Button.Visibility = Visibility.Hidden;
+                         if (_Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.channelID == channelID).isBlocked == "Unblock User")
+                         {
+                             msg.IsEnabled = false;
+                             msg.Text = "You cannot send message to blocked user";
+                         }
+
+                         if (Launch_Cover.Visibility == Visibility.Visible)
+                         {
+                             Launch_Cover.Visibility = Visibility.Hidden;
+                         }
+                         Online_Grid.Visibility = Visibility.Collapsed;
+                         msg_grid.SetValue(Grid.ColumnSpanProperty, 2);
+                         ListViewMessages.Visibility = Visibility.Visible;
+                         ListViewMessages.Items.Refresh();
+                     }
+                 });
                 Connector.connection.On<string, string>("Blocked_privateUser", (channelID, isBlocked) =>
                 {
                     if (UserData.ChannelID == channelID)
@@ -821,11 +799,11 @@ namespace Halmid_Client
                     _Private_Users.PrivateUsers_Data.FirstOrDefault(x => x.channelID == channelID).isBlocked = isBlocked;
                     ListViewPrivates.Items.Refresh();
                 });
-                Connector.connection.On<string, string>("User_changedAvatar", async(userID, url) => 
+                Connector.connection.On<string, string>("User_changedAvatar", async (userID, url) =>
                 {
                     try
                     {
-    
+
                         if (userID == UserData.LoginID)
                         {
                             UserData.Avatar = await ToBitmapImage.Coverter(480, url);
@@ -856,9 +834,10 @@ namespace Halmid_Client
 
                         ListViewUsers.Items.Refresh();
                         ListViewMessages.Items.Refresh();
-                    }catch(Exception e) { MessageBox.Show(e.ToString()); }
+                    }
+                    catch (Exception e) { MessageBox.Show(e.ToString()); }
                 });
-                Connector.connection.On<string, string>("Private_changedAvatar", async(userID, url) => 
+                Connector.connection.On<string, string>("Private_changedAvatar", async (userID, url) =>
                 {
                     _Private_Users.PrivateUsers_Data.Where(x => x.userID == userID).Single().Avatar = await ToBitmapImage.Coverter(480, url);
                     ListViewPrivates.Items.Refresh();
@@ -925,12 +904,16 @@ namespace Halmid_Client
         }
         private void Download_Update(object sender, RoutedEventArgs e)
         {
-            Start_Updater.Start();
+            try
+            {
+                Start_Updater.Start();
+            }
+            catch (Exception) { }
         }
         private async void TriggerTextChanged(object sender, TextChangedEventArgs e)
         {
             try
-            {     
+            {
                 int lineCount = msg.LineCount;
                 if (lineCount > 1 && previousLineCount != lineCount)
                 {
@@ -992,7 +975,7 @@ namespace Halmid_Client
         {
             await Task.Run(() =>
             {
-                this.Dispatcher.BeginInvoke(new Action(async() =>
+                this.Dispatcher.BeginInvoke(new Action(async () =>
                 {
                     try
                     {
@@ -1015,7 +998,7 @@ namespace Halmid_Client
                         if (UserData.ChannelID != _ChannelList.Channels[channelindex].ChannelHash)
                         {
                             Loading_Panel.Visibility = Visibility.Visible;
-                            ListViewMessages.Visibility = Visibility.Collapsed;                       
+                            ListViewMessages.Visibility = Visibility.Collapsed;
                             WritingUsers_Text.Text = "";
                             msg.Text = ""; ;
                             await Task.Delay(100);
@@ -1179,7 +1162,7 @@ namespace Halmid_Client
                 Online_Grid.Visibility = Visibility.Collapsed;
                 Launch_Cover.Visibility = Visibility.Visible;
                 msg_grid.SetValue(Grid.ColumnSpanProperty, 2);
-                if(Emotes.Visibility == Visibility.Visible)
+                if (Emotes.Visibility == Visibility.Visible)
                 {
                     Emotes.Visibility = Visibility.Collapsed;
                 }
@@ -1443,7 +1426,7 @@ namespace Halmid_Client
         }
         private void Display_Emotes(object sender, RoutedEventArgs e)
         {
-            if(Emotes.Visibility == Visibility.Visible)
+            if (Emotes.Visibility == Visibility.Visible)
             {
                 Emotes.Visibility = Visibility.Collapsed;
             }

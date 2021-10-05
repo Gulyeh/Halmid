@@ -50,7 +50,7 @@ namespace Halmid_Client.Windows.Search_User
                     MessageBox.Show(e.ToString());
                 }
             });
-            Connector.connection.On<Online_Users_inChannel, string>("new_friendAdded", async(user, url)=>
+            Connector.connection.On<Online_Users_inChannel, string>("new_friendAdded", async (user, url) =>
             {
                 try
                 {
@@ -99,7 +99,7 @@ namespace Halmid_Client.Windows.Search_User
             });
             Connector.connection.On<Online_Users_inChannel>("Friend_changedStatus", user =>
             {
-                if(user.Status == "Gray")
+                if (user.Status == "Gray")
                 {
                     if (_Friends.friends.FirstOrDefault(x => x.userID == user.userID) != null)
                     {
@@ -125,12 +125,33 @@ namespace Halmid_Client.Windows.Search_User
                 }
                 userList.Items.Refresh();
             });
-            Connector.connection.On<string, string>("Friend_changedAvatar", async (userID, url) => 
-            { 
+            Connector.connection.On<string, string>("Friend_changedAvatar", async (userID, url) =>
+            {
                 _Friends.friends.Where(x => x.userID == userID).Single().Avatar = await ToBitmapImage.Coverter(480, url);
                 _Pending.pending.Where(x => x.userID == userID).Single().Avatar = await ToBitmapImage.Coverter(480, url);
                 userList.Items.Refresh();
             });
+            Connector.connection.On<string, string>("Friend_updatedName", (name, userID) =>
+            {
+                _Friends.friends.Where(x => x.userID == userID).Single().Name = name;
+                _Pending.pending.Where(x => x.userID == userID).Single().Name = name;
+
+                if (Friends_Title.Text == "All Friends")
+                {
+                    userList.ItemsSource = _Friends.friends;
+                }
+                else if(Friends_Title.Text == "Online Friends")
+                {
+                    userList.ItemsSource = _Friends.friends.Where(x => x.Status != "Gray");
+                }
+                else
+                {
+                    userList.ItemsSource = _Pending.pending;
+                }
+
+                userList.Items.Refresh();
+            });
+
         }
         private async void Delete_Friend(object sender, RoutedEventArgs e)
         {

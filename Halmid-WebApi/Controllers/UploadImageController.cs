@@ -16,9 +16,9 @@ namespace Halmid_WebApi.Controllers
             {
                 if (data["channelID"] != null && data["ImageID"] != null && data["Base64"] != null)
                 {
-                    if (System.IO.Directory.Exists("C:/xampp/htdocs/" + data["channelID"].ToString()))
+                    if (System.IO.Directory.Exists("C:/xampp/htdocs/Channels/" + data["channelID"].ToString()))
                     {
-                        System.IO.File.WriteAllBytes("C:/xampp/htdocs/" + data["channelID"].ToString() + "/" + data["ImageID"].ToString() + ".png", Convert.FromBase64String(data["Base64"].ToString()));
+                        System.IO.File.WriteAllBytes("C:/xampp/htdocs/Channels/" + data["channelID"].ToString() + "/" + data["ImageID"].ToString() + ".png", Convert.FromBase64String(data["Base64"].ToString()));
                     }
                 }
             }

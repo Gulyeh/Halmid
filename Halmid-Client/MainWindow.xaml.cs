@@ -667,6 +667,7 @@ namespace Halmid_Client
                 });
                 Connector.connection.On<string, string, string>("userBanned_fromChannel", (admin_name, reason, duration) =>
                 {
+                    newChannel.Close();
                     Ban_Message_Window banned = new Ban_Message_Window(reason, duration, admin_name);
                     banned.Owner = this;
                     banned.WindowStartupLocation = WindowStartupLocation.CenterOwner;

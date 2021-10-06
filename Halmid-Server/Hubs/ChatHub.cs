@@ -1248,7 +1248,7 @@ namespace Halmid_Server.Hubs
                 catch (Exception) { }
             }
         }
-        public async Task Edit_Message(string messageid, string new_text)
+        public async Task Edit_Message(string messageid, Dictionary<string, string> message)
         {
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
@@ -1256,9 +1256,9 @@ namespace Halmid_Server.Hubs
                 {
                     using (MySqlCommand cmd = Startup.connection.CreateCommand())
                     {
-                        cmd.CommandText = String.Format("UPDATE messages_history SET message = '{0}', edited = '{1}' WHERE idmessages = '{2}'", new_text, 1, messageid);
+                        cmd.CommandText = String.Format("UPDATE messages_history SET message = '{0}', edited = '{1}', decrypt_key = '{3}' WHERE idmessages = '{2}'", message["message"], 1, messageid, message["key"]);
                         cmd.ExecuteScalar();
-                        await Clients.Group(userData.ChannelID).SendAsync("Edited_Message", true, messageid, new_text);
+                        await Clients.Group(userData.ChannelID).SendAsync("Edited_Message", true, messageid, message);
                     }
                 }
                 catch (Exception) { }

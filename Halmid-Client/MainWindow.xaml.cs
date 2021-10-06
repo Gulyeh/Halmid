@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -430,7 +431,7 @@ namespace Halmid_Client
 
                     if (isAdmin)
                     {
-                        settings.Height = 470;
+                        settings.Height = 330;
                     }
                     else
                     {
@@ -605,11 +606,12 @@ namespace Halmid_Client
                         ListViewMessages.Items.Refresh();
                     }
                 });
-                Connector.connection.On<bool, string, string>("Edited_Message", (isEdited, messageID, new_text) =>
+                Connector.connection.On<bool, string, Dictionary<string, string>>("Edited_Message", (isEdited, messageID, message) =>
                 {
                     if (isEdited)
                     {
-                        MessagesData.Where(x => x.MessageID == messageID).Single().Content = new_text;
+
+                        MessagesData.Where(x => x.MessageID == messageID).Single().Content = CryptMessage.Decrypt(Convert.FromBase64String(message["message"]), Convert.FromBase64String(message["key"].Split('!')[0]), Convert.FromBase64String(message["key"].Split('!')[1])); ;
                         ListViewMessages.ItemsSource = MessagesData;
                         ListViewMessages.Items.Refresh();
                     }
@@ -668,13 +670,13 @@ namespace Halmid_Client
                 Connector.connection.On<string, string, string>("userBanned_fromChannel", (admin_name, reason, duration) =>
                 {
                     newChannel.Close();
-                    Ban_Message_Window banned = new Ban_Message_Window(reason, duration, admin_name);
-                    banned.Owner = this;
-                    banned.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                     Channel_Grid.Opacity = 0.4;
                     Priv_Grid.Opacity = 0.4;
                     msg_grid.Opacity = 0.4;
                     Online_Grid.Opacity = 0.4;
+                    Ban_Message_Window banned = new Ban_Message_Window(reason, duration, admin_name);
+                    banned.Owner = this;
+                    banned.WindowStartupLocation = WindowStartupLocation.CenterOwner;
                     banned.Show();
 
                     banned.Closed += (s, b) =>
@@ -905,7 +907,7 @@ namespace Halmid_Client
         }
         private void Download_Update(object sender, RoutedEventArgs e)
         {
-           Start_Updater.Start();
+            Start_Updater.Start();
         }
         private async void TriggerTextChanged(object sender, TextChangedEventArgs e)
         {
@@ -1254,7 +1256,15 @@ namespace Halmid_Client
                         text.Background = Brushes.Transparent;
                         text.IsEnabled = false;
                         text.IsEnabled = true;
-                        await Connector.connection.SendAsync("Edit_Message", MessagesData[msgindex].MessageID, text.Text);
+                        var key = new AesManaged().Key;
+                        var vector = new AesManaged().IV;
+                        var crypted = CryptMessage.Encrypt(text.Text, key, vector);
+                        var keypair = new Dictionary<string, string>
+                            {
+                                {"key", Convert.ToBase64String(key) + "!" + Convert.ToBase64String(vector)},
+                                {"message", Convert.ToBase64String(crypted)}
+                            };
+                        await Connector.connection.SendAsync("Edit_Message", MessagesData[msgindex].MessageID, keypair);
                         text.Text = oldmessage;
                     }
                 }

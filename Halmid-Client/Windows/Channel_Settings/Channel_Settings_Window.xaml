@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Halmid_Client.Windows.Channel_Settings"
         mc:Ignorable="d"
-        Title="Helmid" Height="330" Width="500"
+        Title="Helmid" Height="340" Width="500"
         ResizeMode="NoResize"
         WindowStyle="None"
         Background="Transparent"

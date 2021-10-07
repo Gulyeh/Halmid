@@ -305,6 +305,7 @@ namespace Halmid_Client
                         OnlineUsers_Data.Add(user);
                     }
                     ListViewUsers.ItemsSource = OnlineUsers_Data.Where(x => x.Status != "Gray");
+                    ListViewUsers.Items.Refresh();
                 });
                 Connector.connection.On<bool, ObservableCollection<MessageDataView>, Dictionary<string, string>, ObservableCollection<Online_Users_inChannel>, string, List<string>, List<string>>("Switched_Channel", async (switched, messages, crypted_data, users, isAdmin, msg_url, online_url) =>
                  {
@@ -508,7 +509,7 @@ namespace Halmid_Client
 
                         if (UserData.ChannelID == id)
                         {
-                            Channel_Name.Text = "# " + name;
+                            Channel_Name.Text = "#" + name;
                         }
                     }
                 });

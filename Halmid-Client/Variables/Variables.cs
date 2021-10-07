@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Media.Imaging;
 
 namespace Halmid_Client.Variables
@@ -36,11 +37,49 @@ namespace Halmid_Client.Variables
         public string userID { get; set; }
         public string ChannelHash { get; set; }
     }
-    public class ChannelList
+    public class ChannelList : INotifyPropertyChanged
     {
-        public string Name { get; set; }
-        public string ChannelHash { get; set; }
-        public BitmapImage Avatar { get; set; }
+        private string name { get; set; }
+        public string Name
+        {
+            get { return name; }
+            set 
+            {
+                if (name == value) return;
+                name = value;
+                NotifyPropertyChanged("Name");
+            }
+        }
+        private string channelHash { get; set; }
+        public string ChannelHash
+        {
+            get { return channelHash; }
+            set
+            {
+                if (channelHash == value) return;
+                channelHash = value;
+                NotifyPropertyChanged("ChannelHash");
+            }
+        }
+        private BitmapImage avatar { get; set; }
+        public BitmapImage Avatar
+        {
+            get { return avatar; }
+            set
+            {
+                if (avatar == value) return;
+                avatar = value;
+                NotifyPropertyChanged("Avatar");
+            }
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void NotifyPropertyChanged(string propertyName)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
     }
     public class _ChannelList
     {

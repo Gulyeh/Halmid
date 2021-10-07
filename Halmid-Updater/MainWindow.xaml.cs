@@ -65,14 +65,17 @@ namespace Halmid_Updater
             try{
                 Application.Current.Dispatcher.Invoke((Action)delegate
                 {
-                    Download_Progress.Value = 0;
-                    Info_Progress.Text = "Extracting...";
-                    await Functions.ExtractionFiles.Extract();
-                    await Task.Delay(1000);
-                    ProcessStartInfo start = new ProcessStartInfo();
-                    start.FileName = AppDomain.CurrentDomain.BaseDirectory + @"Halmid-Client.exe";
-                    Process.Start(start);
-                    this.Close();
+                    if(Download_Progress.Value == 100)
+                    {
+                        Download_Progress.Value = 0;
+                        Info_Progress.Text = "Extracting...";
+                        await Functions.ExtractionFiles.Extract();
+                        await Task.Delay(1000);
+                        ProcessStartInfo start = new ProcessStartInfo();
+                        start.FileName = AppDomain.CurrentDomain.BaseDirectory + @"Halmid-Client.exe";
+                        Process.Start(start);
+                        this.Close();
+                    }
                 });
             }catch(Exception) { this.Close(); }
         }

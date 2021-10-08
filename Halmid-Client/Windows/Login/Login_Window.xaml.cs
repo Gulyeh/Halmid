@@ -43,7 +43,38 @@ namespace Halmid_Client.Windows.Login
             {
                 CreateConfig();
             }
+            CheckUpdateFiles();
         }
+        
+        private async void CheckUpdateFiles()
+        {
+            try
+            {
+                string path = Directory.GetCurrentDirectory();
+                if(File.Exists(path + @"\Updater.exe"))
+                {
+                    await PermaDelete(path);
+                    File.Move(path + @"\Updater.exe", path + @"\Halmid-Updater.exe");
+                }
+            }
+            catch (Exception) { }
+        }
+        private static async Task PermaDelete(string path)
+        {
+            await Task.Run(() =>
+            {
+                Process p = new Process();
+                p.StartInfo = new ProcessStartInfo("cmd.exe", "/c cd " + path + " && del Halmid-Updater.exe")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                p.Start();
+                p.WaitForExit();
+            });
+        }
+        
         private void SaveConfig()
         {
             try

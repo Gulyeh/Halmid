@@ -22,7 +22,7 @@ namespace Halmid_Updater.Functions
                     {
                         string dir = entry.FullName;
                         {
-                            if (entry.FullName.EndsWith("/"))
+                            if (entry.FullName.EndsWith("/") || entry.FullName.EndsWith(@"\"))
                             {
                                 string path = zipPath + entry.FullName.Substring(0, entry.FullName.Length - 1);
                                 if (!Directory.Exists(path))
@@ -40,25 +40,25 @@ namespace Halmid_Updater.Functions
                         }
                     }
                 }
-                await PermaDelete(zipPath + "Update_Pack.zip");
+                await PermaDelete(zipPath);
             }
-            catch (Exception) {}
+            catch (Exception) { }
         }
         
-        private static async Task PermaDelete(string path)
+        private static Task PermaDelete(string path)
         {
-            await Task.Run(() => { 
-                Process p = new Process();
-                MessageBox.Show(path);
-                p.StartInfo = new ProcessStartInfo("cmd.exe", "/c del -f " +path )
-                    {
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    };
-                p.Start();
-                p.WaitForExit();
-            });
+            Process p = new Process();
+            MessageBox.Show(path);
+            p.StartInfo = new ProcessStartInfo("cmd.exe", "/c cd "+ path + " && del Update_Pack.zip")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+            p.Start();
+            p.WaitForExit();
+            
+            return Task.CompletedTask;
         }
     }
 }

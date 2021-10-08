@@ -1046,7 +1046,7 @@ namespace Halmid_Server.Hubs
                 catch (Exception) { }
             }
         }
-        public async Task Change_userStatus(string status)
+        public async Task Change_userStatus(string status, string channel_Type)
         {
             if (_connectionInfo.TryGetValue(Context.ConnectionId, out User userData))
             {
@@ -1153,7 +1153,7 @@ namespace Halmid_Server.Hubs
                             }
                         }
 
-                        if (userData.ChannelID == null || userData.ChannelID == String.Empty)
+                        if (userData.ChannelID == null || userData.ChannelID == String.Empty || channel_Type == "private")
                         {
                             await Clients.Client(Context.ConnectionId).SendAsync("Changed_userStatus", online, true, ApiVariable.IPConnection + "Users/" + userData.LoginID + "/" + userData.AvatarID + ".png");
                         }

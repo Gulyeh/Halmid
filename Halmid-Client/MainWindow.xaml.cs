@@ -1119,7 +1119,7 @@ namespace Halmid_Client
                         break;
                 }
 
-                await Connector.connection.SendAsync("Change_userStatus", status);
+                await Connector.connection.SendAsync("Change_userStatus", status, Global_Variables.channelType);
             }
             catch (Exception) { }
         }

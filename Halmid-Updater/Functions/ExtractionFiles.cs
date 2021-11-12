@@ -48,7 +48,6 @@ namespace Halmid_Updater.Functions
         private static Task PermaDelete(string path)
         {
             Process p = new Process();
-            MessageBox.Show(path);
             p.StartInfo = new ProcessStartInfo("cmd.exe", "/c cd "+ path + " && del Update_Pack.zip")
                 {
                     RedirectStandardOutput = true,
